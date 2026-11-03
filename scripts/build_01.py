@@ -15,16 +15,19 @@ md(r'''
 - Формат: выполнение готового кода, изменение параметров, анализ результатов.
 - Темы: реконструкция и генерация; prior и posterior; VAE; GAN; image-to-image.
 - Сравнение: AE — реконструкция; VAE — латентное распределение; GAN — состязательное обучение; cVAE/cGAN — управление классом.
-- Основной маршрут: разделы 1–5 → 7 → 9–11. Дополнительные разделы — самостоятельная работа.
+- **Вопрос занятия:** как перейти от реконструкции изображения к генерации нового объекта и управлению его классом?
+- **Маршрут разбора:** разделы 1–5 → 7 → 9 и «Практика 1» → фотографии TAESD → сравнение. CycleGAN и подробные диагностики — дополнительно.
 
 | Минуты | Основной материал |
 |---|---|
-| 0–8 | Данные 28×28 и реконструкция AE |
-| 8–33 | VAE: posterior, обучение, генерация |
-| 33–55 | DCGAN: обучение и разнообразие |
-| 55–68 | Условные варианты: метка и случайный код |
-| 68–80 | Фотографии: TAESD и краткий показ CycleGAN |
-| 80–90 | Сравнение методов и контрольные вопросы |
+| 0–5 | Стартовый резерв: Colab и «Выполнить все» в фоне |
+| 5–12 | AE: реконструкция и случайные коды |
+| 12–33 | VAE: prior/posterior, репараметризация, генерация |
+| 33–50 | GAN: другой критерий и два шага обновления |
+| 50–65 | Условие класса: один короткий самостоятельный опыт |
+| 65–72 | Фотографии: демонстрация TAESD |
+| 72–80 | Сравнение и контрольные вопросы |
+| 80–90 | Резерв на вопросы и задержки |
 
 **Colab:** «Файл → Загрузить блокнот» → «Среда выполнения → Выполнить все». Для обучения свёрточных сетей рекомендуется GPU; CPU поддерживается. При отсутствии библиотек:
 
@@ -33,7 +36,8 @@ md(r'''
 ```
 
 - Основные данные MNIST загружаются один раз (~12 MB); новый inference CycleGAN требует сети. Сохранённый результат встроен.
-- «Выполнить все» включает дополнительные эксперименты.
+- **Проведение:** 75 минут основного материала + 15 минут резерва. Один самостоятельный опыт. «Выполнить все» выполняется один раз и включает дополнительные зависимости (в частности, probe для cVAE). Дополнителен разбор, а не первый запуск этих ячеек.
+- Если подключение задержалось более чем на 5 минут, продолжить по сохранённым outputs. На занятии повторять только короткую «Практику 1»; обучение и перебор β не повторять.
 - `SEMINAR_QUICK=1` — сокращённая проверка исполнения; качество моделей в этом режиме не оценивается.
 ''')
 
@@ -149,7 +153,9 @@ def image_grid(images, title, columns=10, labels=None, vmin=0.0, vmax=1.0, row_l
             if labels is not None:
                 axis.set_title(str(labels[index]), fontsize=9)
             if row_labels is not None and index % columns == 0:
-                axis.text(-0.12, 0.5, f"y={row_labels[index // columns]}", transform=axis.transAxes, ha="right", va="center", fontsize=11)
+                label = row_labels[index // columns]
+                label = f"y={label}" if isinstance(label, int) else str(label)
+                axis.text(-0.12, 0.5, label, transform=axis.transAxes, ha="right", va="center", fontsize=11)
     fig.suptitle(title)
     fig.tight_layout()
     plt.show()
@@ -162,7 +168,7 @@ image_grid(x_train[:18], "MNIST training images: native 28 x 28", columns=6, lab
 md(r'''
 ## 2. Автоэнкодер: базовая модель
 
-**Логика развития:** AE — реконструкция; VAE — вероятностная модель кодов; GAN — обучение генерации через дискриминатор. Следующий семинар: точная плотность потока и пошаговая генерация диффузии. Семейства развивались параллельно; единого победителя нет.
+**Логика развития:** сначала восстановим наблюдаемую цифру. Затем проверим случайные коды: одной реконструкции недостаточно для генерации. VAE задаёт prior и вероятностную модель; GAN вводит другой критерий обучения. Метка класса добавляет управление. Семейства развивались параллельно; единого победителя нет.
 
 - Encoder $e_\phi$: изображение → код; decoder $g_\theta$: код → реконструкция.
 - $B$ — размер батча; $\phi,\theta$ — параметры сетей.
@@ -479,6 +485,8 @@ image_grid(torch.cat([clean, corrupted, restored]), "Original / masked input / V
 md(r'''
 ## 7. Генеративно-состязательная сеть
 
+В VAE обучение определяется выбранными likelihood и вариационным приближением. Рассмотрим другой критерий: генератор получает градиент от обучаемого дискриминатора. Сравним характер генераций и разнообразие; универсального преимущества одного семейства здесь не устанавливаем.
+
 <img src="https://arxiv.org/html/1511.06434v2/lsun_bedrooms_generator.png" alt="DCGAN generator: transposed convolutions from latent vector to image" width="720">
 
 *Генератор DCGAN. [Radford, Metz, Chintala (2016), рис. 1](https://arxiv.org/html/1511.06434v2). В практикуме используется компактный свёрточный генератор 7→14→28.*
@@ -648,7 +656,7 @@ $$p_\theta(x\mid y)=\int p_\theta(x\mid z,y)p(z)\,dz,\qquad q_\phi(z\mid x,y).$$
 - Генерация: $y$, $z\sim\mathcal N(0,I)$, decoder.
 - Prior независим от класса.
 - В опыте cVAE используется β=4: усиленный KL-штраф уменьшает выгодность кодирования класса только в $z$. Это модифицированная β-VAE-цель; отрицательная ELBO соответствует β=1.
-- Задание: сравнить β=1 и β=4 по управлению классом и деталям изображения.
+- После занятия: сравнить β=1 и β=4 по управлению классом и деталям изображения; это требует повторного обучения.
 - Диагностика: соответствие запрошенного класса предсказанию классификатора.
 
 **Теория:** [Варианты VAE](https://fpakhurov.com/ru/notes/generative-models/vae-variants/).
@@ -742,13 +750,43 @@ print("Probe agreement is a diagnostic, not a complete generation-quality measur
 ''')
 
 md(r'''
+### Практика 1. Метка класса и случайный код — 8 минут
+
+- Выполнить «Выполнить все» один раз; дождаться обучения cVAE/cGAN. Ниже выполняется только генерация.
+- **Гипотеза:** при фиксированном `LATENT_SEED` смена `TARGET_CLASS` меняет класс изображения.
+- **Действие:** выбрать 3, затем 8; сохранить seed. После этого изменить только seed.
+- **Результат:** сопоставить управление классом, различия начертания и ошибки моделей. Одинаковый seed не означает одинаковое латентное пространство двух моделей.
+- Обучающие ячейки и перебор β повторно на занятии не запускаются.
+''')
+
+code(r'''
+#@title Practice 1: change the class without retraining
+TARGET_CLASS = 3 #@param {type:"slider", min:0, max:9, step:1}
+LATENT_SEED = 42 #@param {type:"integer"}
+
+local_rng = torch.Generator(device="cpu").manual_seed(LATENT_SEED)
+z_vae_live = torch.randn(8, LATENT_DIM, generator=local_rng).to(device)
+z_gan_live = torch.randn(8, GAN_Z_DIM, generator=local_rng).to(device)
+live_labels = torch.full((8,), TARGET_CLASS, dtype=torch.long, device=device)
+cvae.eval()
+cgan.eval()
+with torch.no_grad():
+    live_vae = cvae.decode(z_vae_live, live_labels).cpu()
+    live_gan = cgan(z_gan_live, live_labels).cpu()
+image_grid(torch.cat([live_vae, live_gan]), f"Target class {TARGET_CLASS}; latent seed {LATENT_SEED}",
+           columns=8, row_labels=["cVAE", "cGAN"])
+print("Inference only; no training performed.")
+''')
+cells[-1].metadata.update({"cellView": "form", "tags": ["live_practice"]})
+
+md(r'''
 <details><summary>Дополнительно: условный GAN</summary>
 
 Добавить класс к обеим сетям: $G(z,y)$, $D(x,y)$. Реальные пары $(x,y)$ берутся из данных, синтетические — $(G(z,y),y)$. Градиент генератора проходит через $D(G(z,y),y)$.
 
 </details>
 
-## 10. Преобразование изображений: image-to-image
+## 10. Дополнительно: image-to-image и CycleGAN
 
 <img src="https://arxiv.org/html/1703.10593v7/paired_unpaired2.png" alt="CycleGAN: paired and unpaired training data" width="720">
 

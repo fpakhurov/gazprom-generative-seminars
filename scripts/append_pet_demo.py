@@ -25,6 +25,9 @@ for filename in arguments.notebooks:
 
 **Теория:** [Латентная диффузия: роль автоэнкодера](https://fpakhurov.com/ru/notes/generative-models/latent-diffusion/), [условный перевод доменов](https://fpakhurov.com/ru/notes/generative-models/stargan/).
 """.strip())
+    if filename.startswith("02_"):
+        explanation.source = explanation.source.replace("## Фотографии", "## Дополнительно: фотографии", 1)
+        explanation.source += "\n\nЭтот опыт разобран в первом семинаре; повторный показ во втором в основной тайминг не входит."
     demo = nbf.v4.new_code_cell(
         '#@title Real cat and dog: reconstruction and latent perturbation\n'
         'RUN_PET_DEMO = True #@param {type:"boolean"}\n'

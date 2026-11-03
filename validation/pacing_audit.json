@@ -1,0 +1,101 @@
+{
+  "date": "2026-11-04",
+  "method": "Parse the notebook-builder introduction tables; verify continuous ranges and core/reserve sums",
+  "group_rehearsal_performed": false,
+  "assumptions": [
+    "Ready code; detailed model implementations are reference material",
+    "Google sign-in checked before class",
+    "Run all once, then repeat inference-only cells",
+    "Use saved outputs if runtime setup exceeds five minutes"
+  ],
+  "plans": [
+    {
+      "notebook": "01_vae_gan.ipynb",
+      "ranges_minutes": [
+        [
+          0,
+          5
+        ],
+        [
+          5,
+          12
+        ],
+        [
+          12,
+          33
+        ],
+        [
+          33,
+          50
+        ],
+        [
+          50,
+          65
+        ],
+        [
+          65,
+          72
+        ],
+        [
+          72,
+          80
+        ],
+        [
+          80,
+          90
+        ]
+      ],
+      "core_minutes": 75,
+      "reserve_minutes": 15,
+      "duration_minutes": 90,
+      "gaps_or_overlaps": false,
+      "independent_core_experiments": 1
+    },
+    {
+      "notebook": "02_flows_diffusion.ipynb",
+      "ranges_minutes": [
+        [
+          0,
+          5
+        ],
+        [
+          5,
+          11
+        ],
+        [
+          11,
+          28
+        ],
+        [
+          28,
+          33
+        ],
+        [
+          33,
+          55
+        ],
+        [
+          55,
+          70
+        ],
+        [
+          70,
+          73
+        ],
+        [
+          73,
+          80
+        ],
+        [
+          80,
+          90
+        ]
+      ],
+      "core_minutes": 75,
+      "reserve_minutes": 15,
+      "duration_minutes": 90,
+      "gaps_or_overlaps": false,
+      "independent_core_experiments": 1
+    }
+  ]
+}

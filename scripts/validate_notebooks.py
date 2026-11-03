@@ -22,13 +22,25 @@ def validate(path, destination):
     notebook = nbformat.read(path, as_version=4)
     nbformat.validate(notebook)
     started = time.perf_counter()
+    cell_started = {}
+    cell_seconds = {}
+
+    def start_cell(cell, cell_index, **kwargs):
+        if cell.cell_type == "code":
+            cell_started[cell_index] = time.perf_counter()
+
+    def finish_cell(cell, cell_index, **kwargs):
+        cell_seconds[str(cell_index)] = round(time.perf_counter() - cell_started[cell_index], 3)
+        print(f"Executed cell {cell_index}: {cell_seconds[str(cell_index)]:.3f} s", flush=True)
+
     client = NotebookClient(
         notebook,
         timeout=900,
         kernel_name="python3",
         resources={"metadata": {"path": str(path.parent)}},
         allow_errors=False,
-        on_cell_executed=lambda cell, cell_index, **kwargs: print(f"Executed cell {cell_index}", flush=True),
+        on_cell_start=start_cell,
+        on_cell_executed=finish_cell,
     )
     client.execute()
     seconds = time.perf_counter() - started
@@ -64,6 +76,7 @@ def validate(path, destination):
         "execution": "full local notebook execution",
         "environment_overrides": {key: os.environ[key] for key in ["SEMINAR_DEVICE", "SEMINAR_DIFFUSION_DEVICE", "SEMINAR_QUICK"] if key in os.environ},
         "elapsed_seconds": round(seconds, 2),
+        "cell_seconds": cell_seconds,
         "python": sys.version.split()[0],
         "platform": platform.platform(),
         "packages": {
@@ -81,6 +94,14 @@ def validate(path, destination):
         "notebook_sha256": hashlib.sha256(path.read_bytes()).hexdigest(),
         "colab_hosted_runtime_tested": False,
     }
+    colab_report_path = destination / f"colab_{path.stem[:2]}_execution.json"
+    if colab_report_path.exists():
+        colab_report = json.loads(colab_report_path.read_text())
+        current_hashes = [hashlib.sha256(cell.source.strip().encode()).hexdigest()
+                          for cell in notebook.cells if cell.cell_type == "code"]
+        if colab_report.get("code_sha256") == current_hashes:
+            report["colab_hosted_runtime_tested"] = True
+            report["colab_verification_report"] = colab_report_path.name
     (destination / f"{path.stem}_execution.json").write_text(
         json.dumps(report, ensure_ascii=False, indent=2), encoding="utf-8"
     )

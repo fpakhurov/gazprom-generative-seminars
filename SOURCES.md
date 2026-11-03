@@ -58,7 +58,7 @@
 - Официальный [pytorch-CycleGAN-and-pix2pix](https://github.com/junyanz/pytorch-CycleGAN-and-pix2pix), архитектура на commit **2a7afba2895d52556dd5dfe07e8555ef657ced6f**.
 - Веса horse→zebra: официальный HTTPS-сервер Berkeley; демонстрируется inference, обучение не воспроизводится.
 - В 90-минутном маршруте использовать подготовленный кеш или сохранённое изображение.
-- Статус выполнения и ограничения: [VALIDATION.md](VALIDATION.md). Hosted Colab отдельно не тестировался.
+- Статус выполнения и ограничения: [VALIDATION.md](VALIDATION.md). Полный запуск в Colab на Tesla T4 проверен; результаты и ограничения измерений указаны в VALIDATION.md.
 
 ## Архитектурные схемы
 

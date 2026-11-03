@@ -13,6 +13,7 @@ md(r'''
 **Газпром · 90 минут · практикум с готовым кодом**
 
 - **Подготовка:** Python, основы нейросетей.
+- **Вопрос занятия:** как вычислять плотность данных и как превратить удаление шума в управляемую генерацию и редактирование?
 - **Цель:** оценивание плотности, генерация и редактирование изображений.
 - **Данные:** двумерные точки; рукописные цифры 28×28 MNIST.
 - **Формат:** выполнение ячеек, анализ графиков, изменение параметров.
@@ -21,15 +22,19 @@ md(r'''
 
 | Минуты | Основной материал |
 |---|---|
-| 0–8 | Связь с VAE/GAN; гауссовская модель |
-| 8–28 | RealNVP: плотность, обратимость, условный вариант |
-| 28–55 | DDPM: зашумление, обучение, генерация |
-| 55–65 | Класс и classifier-free guidance |
-| 65–80 | Один опыт: image-to-image или inpainting |
-| 80–90 | Сравнение четырёх семейств; вопросы |
+| 0–5 | Стартовый резерв: Colab и «Выполнить все» в фоне |
+| 5–11 | Задача плотности и гауссовская модель |
+| 11–28 | RealNVP: замена переменных, генерация, обратимость |
+| 28–33 | Условный поток и ограничения обратимой архитектуры |
+| 33–55 | DDPM: зашумление, предсказание шума, обратная цепочка |
+| 55–70 | Один опыт: SDEdit; возможна замена на CFG |
+| 70–73 | Краткая демонстрация второго механизма |
+| 73–80 | Сравнение четырёх семейств |
+| 80–90 | Резерв на вопросы и задержки |
 
 Дополнительно: число слоёв потока, якобиан, коэффициенты posterior, inpainting.
-«Выполнить все» выполняет также дополнительные ячейки.
+**Проведение:** 75 минут основного материала + 15 минут резерва (5 минут старта и 10 минут в конце). Один самостоятельный опыт. «Выполнить все» заранее выполняет также дополнительные зависимости; на занятии их код не разбирается.
+- Если подключение задержалось более чем на 5 минут, продолжить по сохранённым outputs. Повторять только короткие ячейки генерации/редактирования; обучение и дополнительные опыты оставить после занятия.
 ''')
 
 md(r'''
@@ -338,6 +343,8 @@ md(r'''
 
 md(r'''
 ## 4. DDPM: прямой процесс
+
+Поток вычисляет плотность благодаря специальной обратимой архитектуре. Диффузионный подход использует другой компромисс: обучение удалению известного шума и многошаговую генерацию. Теперь перейдём от двумерных точек к цифрам 28×28; сеть обратного процесса будет свёрточной.
 
 <img src="https://hojonathanho.github.io/diffusion/assets/img/pgm_diagram_xarrow.png" alt="DDPM: forward noising and learned reverse Markov chains" width="720">
 
@@ -733,16 +740,39 @@ probe_classifier = LogisticRegression(max_iter=300, random_state=SEED)
 probe_classifier.fit(digit_train_np, train_digit_labels)
 print(f"MNIST held-out probe accuracy: {probe_classifier.score(digit_test_np, test_digit_labels):.3f}")
 with torch.no_grad():
+    torch.manual_seed(SEED + 100)
     fixed_start = torch.randn(8, INPUT_DIM, device=device)
     repeated_start = fixed_start.repeat(10, 1)
     requested = torch.arange(10, device=device).repeat_interleave(8)
-    torch.manual_seed(SEED + 100)
     conditional_digits, _ = sample_ddpm(initial=repeated_start, labels=requested, guidance=1.5)
 image_grid(conditional_digits, "Conditional MNIST DDPM: fixed initial noise by column, class by row", cols=8)
 class_agreement = float((probe_classifier.predict(((conditional_digits.cpu().numpy()+1)/2)) == requested.cpu().numpy()).mean())
 print(f"Conditional DDPM probe class agreement: {class_agreement:.3f}")
 print("Class agreement does not measure diversity or guarantee sample quality.")
 ''')
+
+md(r'''
+### Дополнительно: управление классом и guidance
+
+- Короткий показ ведущего; основной самостоятельный опыт ниже — редактирование изображения.
+- Менять только `GUIDANCE_SCALE` при фиксированных классе и seed: 0, 1, 2. Начальный шум и случайные добавки цепочки воспроизводятся на одном устройстве.
+- $w=0$ отключает условную поправку: выбранный класс не фиксируется. При $w>0$ условие управляет классом; случайность сохраняет вариативность результатов.
+''')
+
+code(r'''
+#@title Optional: class and classifier-free guidance, inference only
+TARGET_CLASS = 3 #@param {type:"slider", min:0, max:9, step:1}
+GUIDANCE_SCALE = 1.5 #@param {type:"slider", min:0, max:3, step:0.5}
+SAMPLE_SEED = 42 #@param {type:"integer"}
+
+torch.manual_seed(SAMPLE_SEED)
+live_initial = torch.randn(8, INPUT_DIM, device=device)
+live_labels = torch.full((8,), TARGET_CLASS, dtype=torch.long, device=device)
+live_digits, _ = sample_ddpm(initial=live_initial, labels=live_labels, guidance=GUIDANCE_SCALE)
+image_grid(live_digits, f"Class {TARGET_CLASS}; guidance {GUIDANCE_SCALE}; seed {SAMPLE_SEED}", cols=8)
+print("Inference only; no training performed.")
+''')
+cells[-1].metadata.update({"cellView": "form", "tags": ["live_optional"]})
 
 md(r'''
 - **Анализ генерации:** распознаваемость цифр, повторения, смешение классов. Одна решётка не подтверждает покрытие распределения.
@@ -761,7 +791,7 @@ md(r'''
 
 - **Метод:** зашумление входа до уровня $k$ → обратный DDPM; учебный вариант [SDEdit](https://arxiv.org/abs/2108.01073).
 - **Данные:** test-цифры с искусственной полосой; оригинал доступен для вычисления MSE.
-- **Эксперимент, 20 минут:** сравнить `EDIT_LEVELS`, изменить один уровень, повторить ячейку. Переобучение не требуется; seed сбрасывается.
+- **Практика 2, 10 минут:** сравнить `EDIT_LEVELS`, изменить средний уровень через `EDIT_K`, повторить только следующую ячейку. Переобучение не требуется; seed сбрасывается.
 - **Анализ:** сохранение штрихов и класса относительно степени изменения изображения.
 - **Ограничение:** генеративный prior допускает изменение класса; точное условное восстановление не гарантируется.
 
@@ -773,6 +803,9 @@ md(r'''
 ''')
 
 code(r'''
+#@title Practice 2: change editing strength without retraining
+EDIT_K = 35 #@param {type:"slider", min:15, max:65, step:5}
+
 torch.manual_seed(SEED + 7)
 clean_edit = x_test[:8].clone()
 damaged_edit = clean_edit.reshape(-1, IMAGE_SIZE, IMAGE_SIZE).clone()
@@ -780,8 +813,9 @@ damaged_edit[:, 12:16, 8:20] = 1.0
 damaged_edit = damaged_edit.reshape(-1, INPUT_DIM)
 edit_noise = torch.randn_like(damaged_edit)
 edit_results = {}
-EDIT_LEVELS = [10, 35, 70]
+EDIT_LEVELS = [10, EDIT_K, 70]
 for k in EDIT_LEVELS:
+    torch.manual_seed(SEED + 8)
     t = torch.full((len(damaged_edit),), k - 1, dtype=torch.long, device=device)
     initial = q_sample(damaged_edit, t, edit_noise)
     edited, _ = sample_ddpm(initial=initial, start_t=k - 1, labels=y_test[:8], guidance=1.5)
@@ -803,6 +837,7 @@ edit_mse = {k: F.mse_loss(result, clean_edit).item() for k, result in edit_resul
 print("Pixel MSE to original in [-1, 1], damaged:", round(damaged_mse, 4))
 print("Pixel MSE after editing:", {k: round(v, 4) for k, v in edit_mse.items()})
 ''')
+cells[-1].metadata.update({"cellView": "form", "tags": ["live_practice"]})
 
 md(r'''
 - **Масштаб MSE:** переход `[-1,1] → [0,1]` по формуле `(x+1)/2` уменьшает pixel MSE в 4 раза.

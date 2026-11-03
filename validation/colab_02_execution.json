@@ -1,0 +1,67 @@
+{
+  "python": "3.13.16",
+  "platform": "Linux-6.6.159+-x86_64-with-glibc2.39",
+  "packages": {
+    "torch": "2.11.0+cu130",
+    "numpy": "2.4.6",
+    "matplotlib": "3.10.0",
+    "scikit-learn": "1.6.1"
+  },
+  "gpu": "Tesla T4",
+  "device": "cuda",
+  "code_cells": 17,
+  "code_sha256": [
+    "df68b321d18afa6051b2bc04200c34a9b51bacabd82975c7335bc2d842dee550",
+    "376873c65c4c7b68c5417585da29166a7c90a7a0e9969ca3fb23dad7e0cbb9b1",
+    "104d79a731f9251b74d7b2b886355a75a7bae73e40a065541cbf6aa5bdcdec00",
+    "44cdb2fec72fab993e6cd2e549101def860d80ac83bacad9279660b55b4bf37b",
+    "8a4f77f06ba3a99c96f9f1f173fdbb7a929cc58ad66f6e2fae03ef512d4da79e",
+    "88cc35d13371650846d245f2c3ff40020ca3316aac5536ba75ca00ab0681c0d6",
+    "9380eadcba031a3c5d5070f5593fe1c0497687bf8b851042757ecccf371a9750",
+    "71dbc41c318667ad656637a0cc1c5de90c20bca841c5b2302053b7f85e583de4",
+    "8989256f7c6c443b718ffeee8a56cbc9a50e2dde69241e1fc06310b40ca85d2f",
+    "581b394e5a9873b02ffed1deae5b4141198b0721047fa03d51c614147873841d",
+    "8289121b6e3047a57c9441a057292c67bb4cb99b72ed39b077de1a2d55b85b63",
+    "dd4e0dbd399a506c360ee04550bb329bdf3723d8e04773db38ce7e6b1814bbca",
+    "0f92b1d333e63eb6d243c2088922b901e80bbe660123f0f0c187471f60bfdbb0",
+    "aef913858a96ef6bb0d277c35b0943853ecd4f95648f5e1d610a6d21010479cc",
+    "fae8ef9571713a4ac218227c51792e06ec1d10afef77206d40207fb000617672",
+    "fb9f92709ad7f8649717068bc8eebcd4c3f1a96c92f11b70319311120e90cb9c",
+    "6c3a32f591ca27cb13afd98ae39aa97fd810392ad5316038735c7787a06d626f"
+  ],
+  "date": "2026-11-04",
+  "notebook": "02_flows_diffusion.ipynb",
+  "verification": "Google Colab UI full Run all, followed by IPython code-history hashes",
+  "code_sources_identical": true,
+  "completed_code_cells": 17,
+  "execution_errors_observed": 0,
+  "ddpm_training_seconds": 98.1,
+  "conditional_class_agreement": 0.9,
+  "inference_only_cell_completed": true,
+  "pet_demo_completed": true,
+  "colab_hosted_runtime_tested": true,
+  "full_wall_time_measured": false,
+  "interactive_reruns": [
+    {
+      "control": "GUIDANCE_SCALE",
+      "value": 2.0,
+      "seed": 42,
+      "seconds": 0.865,
+      "timing_source": "Colab executed-in tooltip",
+      "training_performed": false
+    },
+    {
+      "control": "EDIT_K",
+      "value": 50,
+      "seconds": 2.141,
+      "timing_source": "Colab executed-in tooltip",
+      "training_performed": false,
+      "pixel_mse": {
+        "10": 0.1411,
+        "50": 0.1801,
+        "70": 0.2624
+      }
+    }
+  ],
+  "defaults_restored_after_check": true
+}

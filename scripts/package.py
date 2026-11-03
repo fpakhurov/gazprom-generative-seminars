@@ -40,6 +40,16 @@ for name in ["01_vae_gan", "02_flows_diffusion"]:
     report = json.loads((root / "validation" / f"{name}_execution.json").read_text())
     assert report["notebook_sha256"] == hashlib.sha256(path.read_bytes()).hexdigest()
     assert report["executed_code_cells"] == len(code_cells)
+    if report.get("colab_hosted_runtime_tested"):
+        colab_report = json.loads((root / "validation" / report["colab_verification_report"]).read_text())
+        assert colab_report["completed_code_cells"] == len(code_cells)
+        assert colab_report["execution_errors_observed"] == 0
+        assert colab_report["code_sha256"] == [hashlib.sha256(cell.source.strip().encode()).hexdigest() for cell in code_cells]
+    pacing = json.loads((root / "validation" / "pacing_audit.json").read_text())
+    plan = next(plan for plan in pacing["plans"] if plan["notebook"] == path.name)
+    actual_ranges = [[int(a), int(b)] for a, b in re.findall(r"\| (\d+)–(\d+) \|", expected[0][1])]
+    assert plan["ranges_minutes"] == actual_ranges
+    assert plan["core_minutes"] == 75 and plan["reserve_minutes"] == 15
     soup = BeautifulSoup((root / "validation" / f"{name}.html").read_text(), "html.parser")
     assert not soup.find_all("script")
     assert not soup.select(".katex-error")
