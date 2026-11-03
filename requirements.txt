@@ -1,0 +1,13 @@
+# Core notebooks; Colab normally includes these packages.
+torch>=2.4,<3
+numpy>=1.26,<3
+matplotlib>=3.8,<4
+scikit-learn>=1.4,<2
+
+# Local execution and notebook validation.
+nbformat>=5.10,<6
+nbclient>=0.10,<1
+ipykernel>=6.29,<8
+pillow>=10,<14
+nbconvert>=7.16,<8
+beautifulsoup4>=4.12,<5

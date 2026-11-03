@@ -1,0 +1,68 @@
+"""Check saved execution evidence and create a verified portable ZIP package."""
+
+import ast
+import hashlib
+import json
+from pathlib import Path
+import re
+import zipfile
+
+from bs4 import BeautifulSoup
+import nbformat
+
+
+root = Path(__file__).resolve().parents[1]
+figures = json.loads((root / "assets" / "architecture_links.json").read_text())
+figure_urls = {figure["url"] for figure in figures}
+for script in (root / "scripts").glob("*.py"):
+    ast.parse(script.read_text())
+for name in ["01_vae_gan", "02_flows_diffusion"]:
+    path = root / f"{name}.ipynb"
+    notebook = nbformat.read(path, as_version=4)
+    nbformat.validate(notebook)
+    settings = notebook.metadata.get("gazprom_seminar", notebook.metadata.get("seminar", {}))
+    assert settings["duration_minutes"] == 90
+    code_cells = [cell for cell in notebook.cells if cell.cell_type == "code"]
+    for cell in code_cells:
+        ast.parse(cell.source)
+        assert cell.execution_count is not None
+        assert all(output.output_type != "error" for output in cell.get("outputs", []))
+    report = json.loads((root / "validation" / f"{name}_execution.json").read_text())
+    assert report["notebook_sha256"] == hashlib.sha256(path.read_bytes()).hexdigest()
+    assert report["executed_code_cells"] == len(code_cells)
+    soup = BeautifulSoup((root / "validation" / f"{name}.html").read_text(), "html.parser")
+    assert not soup.find_all("script")
+    assert not soup.select(".katex-error")
+    assert soup.select(".katex")
+    assert all(image.get("src", "").startswith("data:") or image.get("src") in figure_urls
+               for image in soup.find_all("img"))
+    expected_figures = {figure["url"] for figure in figures if figure["notebook"] == name}
+    actual_figures = {image.get("src") for image in soup.find_all("img") if not image.get("src", "").startswith("data:")}
+    assert actual_figures == expected_figures
+    print(name, len(code_cells), "executed code cells;", len(soup.select(".katex")), "rendered formulas")
+
+for text in root.glob("*.md"):
+    for target in re.findall(r"\]\(([^)]+)\)", text.read_text()):
+        if not re.match(r"[a-z]+://", target) and not target.startswith("#"):
+            assert (text.parent / target.split("#")[0]).exists(), (text.name, target)
+
+excluded_parts = {".git", ".venv", "venv", ".cache", ".ipynb_checkpoints",
+                  "__pycache__", "cyclegan_cache", "node_modules"}
+files = [path for path in root.rglob("*") if path.is_file()
+         and not excluded_parts.intersection(path.relative_to(root).parts)
+         and path.name not in {".DS_Store", "MANIFEST.sha256", ".env"}
+         and not path.name.startswith(".env.")]
+manifest = "\n".join(f"{hashlib.sha256(path.read_bytes()).hexdigest()}  {path.relative_to(root)}"
+                     for path in sorted(files)) + "\n"
+(root / "MANIFEST.sha256").write_text(manifest)
+files.append(root / "MANIFEST.sha256")
+archive = root.with_suffix(".zip")
+with zipfile.ZipFile(archive, "w", compression=zipfile.ZIP_DEFLATED, compresslevel=9) as bundle:
+    for path in sorted(files):
+        bundle.write(path, arcname=str(Path(root.name) / path.relative_to(root)))
+with zipfile.ZipFile(archive) as bundle:
+    assert bundle.testzip() is None
+    for line in manifest.splitlines():
+        expected, relative = line.split("  ", 1)
+        assert hashlib.sha256(bundle.read(f"{root.name}/{relative}")).hexdigest() == expected
+print("Verified archive:", archive.name, "; files:", len(files), "; MB:", round(archive.stat().st_size / 1e6, 2))

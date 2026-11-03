@@ -1,0 +1,17 @@
+{
+  "architecture_commit": "2a7afba2895d52556dd5dfe07e8555ef657ced6f",
+  "architecture_sha256": "2bfcb7adb19f7b7ff6fd8dd76e313200acf000e96784b920658a62e1a11fc04f",
+  "weights_url": "https://efrosgans.eecs.berkeley.edu/cyclegan/pretrained_models/horse2zebra.pth",
+  "weights_sha256": "5bfc34b154035be1cd592cd273fdf328810bee4756044c9cf7deb8d4b6d2fadb",
+  "input_source": "https://raw.githubusercontent.com/junyanz/pytorch-CycleGAN-and-pix2pix/2a7afba2895d52556dd5dfe07e8555ef657ced6f/imgs/horse2zebra.gif",
+  "input_transformation": "first frame, left half only, resized to 448x256",
+  "input_shape": [
+    1,
+    3,
+    256,
+    448
+  ],
+  "forward_seconds_cpu": 1.739,
+  "training_performed": false,
+  "pytorch": "2.14.1"
+}

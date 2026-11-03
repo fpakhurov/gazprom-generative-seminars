@@ -1,0 +1,68 @@
+[
+  {
+    "id": "vae",
+    "notebook": "01_vae_gan",
+    "url": "https://arxiv.org/html/1906.02691v3/vae_cartoon.png",
+    "source": "https://arxiv.org/html/1906.02691v3",
+    "alt": "VAE: encoder, stochastic latent variable and decoder",
+    "caption": "Схема VAE. [Kingma, Welling (2019), рис. 2.2](https://arxiv.org/html/1906.02691v3).",
+    "checked_date": "2026-11-04",
+    "http_status": 200,
+    "content_type": "image/png"
+  },
+  {
+    "id": "gan",
+    "notebook": "01_vae_gan",
+    "url": "https://arxiv.org/html/1511.06434v2/lsun_bedrooms_generator.png",
+    "source": "https://arxiv.org/html/1511.06434v2",
+    "alt": "DCGAN generator: transposed convolutions from latent vector to image",
+    "caption": "Генератор DCGAN. [Radford, Metz, Chintala (2016), рис. 1](https://arxiv.org/html/1511.06434v2). В практикуме используется полносвязный генератор.",
+    "checked_date": "2026-11-04",
+    "http_status": 200,
+    "content_type": "image/png"
+  },
+  {
+    "id": "cyclegan",
+    "notebook": "01_vae_gan",
+    "url": "https://arxiv.org/html/1703.10593v7/paired_unpaired2.png",
+    "source": "https://arxiv.org/html/1703.10593v7",
+    "alt": "CycleGAN: paired and unpaired training data",
+    "caption": "Парные и непарные обучающие данные. [Zhu et al. (2017), рис. 2](https://arxiv.org/html/1703.10593v7).",
+    "checked_date": "2026-11-04",
+    "http_status": 200,
+    "content_type": "image/png"
+  },
+  {
+    "id": "flow",
+    "notebook": "02_flows_diffusion",
+    "url": "https://lilianweng.github.io/posts/2018-10-13-flow-models/normalizing-flow.png",
+    "source": "https://lilianweng.github.io/posts/2018-10-13-flow-models/",
+    "alt": "Normalizing flow: composition of invertible transformations",
+    "caption": "Композиция обратимых преобразований. [Lilian Weng (2018)](https://lilianweng.github.io/posts/2018-10-13-flow-models/). На схеме: шум → данные; в коде `forward`: данные → код.",
+    "checked_date": "2026-11-04",
+    "http_status": 200,
+    "content_type": "image/png"
+  },
+  {
+    "id": "ddpm",
+    "notebook": "02_flows_diffusion",
+    "url": "https://hojonathanho.github.io/diffusion/assets/img/pgm_diagram_xarrow.png",
+    "source": "https://hojonathanho.github.io/diffusion/",
+    "alt": "DDPM: forward noising and learned reverse Markov chains",
+    "caption": "Прямой и обратный процессы DDPM. [Ho, Jain, Abbeel (2020)](https://hojonathanho.github.io/diffusion/).",
+    "checked_date": "2026-11-04",
+    "http_status": 200,
+    "content_type": "image/png"
+  },
+  {
+    "id": "unet",
+    "notebook": "02_flows_diffusion",
+    "url": "https://lmb.informatik.uni-freiburg.de/people/ronneber/u-net/u-net-architecture.png",
+    "source": "https://lmb.informatik.uni-freiburg.de/people/ronneber/u-net/",
+    "alt": "Original U-Net: contracting and expanding paths with skip connections",
+    "caption": "Исходная U-Net для сегментации: [Ronneberger et al. (2015)](https://lmb.informatik.uni-freiburg.de/people/ronneber/u-net/). В DDPM используют модификации с кодированием времени; в практикуме — MLP.",
+    "checked_date": "2026-11-04",
+    "http_status": 200,
+    "content_type": "image/png"
+  }
+]

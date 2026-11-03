@@ -1,0 +1,138 @@
+{
+  "date": "2026-11-03",
+  "pages_checked": 15,
+  "links_checked": 28,
+  "results": [
+    {
+      "url": "https://fpakhurov.com/ru/notes/generative-models/autoencoders/",
+      "http_status": 200,
+      "anchors_checked": [
+        "reconstruction-loss",
+        "why-the-codes-do-not-generate"
+      ],
+      "missing_anchors": [],
+      "title": "Автоэнкодеры — Генеративные модели — Фёдор Пахуров"
+    },
+    {
+      "url": "https://fpakhurov.com/ru/notes/generative-models/cyclegan/",
+      "http_status": 200,
+      "anchors_checked": [
+        "cycle-consistency",
+        "limitations",
+        "paired-translation-pix2pix"
+      ],
+      "missing_anchors": [],
+      "title": "CycleGAN: перевод изображений без пар — Генеративные модели — Фёдор Пахуров"
+    },
+    {
+      "url": "https://fpakhurov.com/ru/notes/generative-models/ddpm-forward-process/",
+      "http_status": 200,
+      "anchors_checked": [
+        "the-jump-from-x-to-any-step"
+      ],
+      "missing_anchors": [],
+      "title": "DDPM: прямой процесс — Генеративные модели — Фёдор Пахуров"
+    },
+    {
+      "url": "https://fpakhurov.com/ru/notes/generative-models/ddpm-training-objective/",
+      "http_status": 200,
+      "anchors_checked": [
+        "from-means-to-noise",
+        "sampling-running-the-chain-backwards",
+        "the-true-posterior"
+      ],
+      "missing_anchors": [],
+      "title": "DDPM: обратный процесс и целевая функция обучения — Генеративные модели — Фёдор Пахуров"
+    },
+    {
+      "url": "https://fpakhurov.com/ru/notes/generative-models/drag-editing/",
+      "http_status": 200,
+      "anchors_checked": [],
+      "missing_anchors": [],
+      "title": "Редактирование изображений по точкам: DragGAN и DragDiffusion — Генеративные модели — Фёдор Пахуров"
+    },
+    {
+      "url": "https://fpakhurov.com/ru/notes/generative-models/flow-architectures/",
+      "http_status": 200,
+      "anchors_checked": [
+        "a-coupling-layers-nice-realnvp"
+      ],
+      "missing_anchors": [],
+      "title": "Архитектуры потоков — Генеративные модели — Фёдор Пахуров"
+    },
+    {
+      "url": "https://fpakhurov.com/ru/notes/generative-models/gans/",
+      "http_status": 200,
+      "anchors_checked": [
+        "how-to-optimize-alternate-the-players",
+        "which-generator-loss-is-used-in-practice"
+      ],
+      "missing_anchors": [],
+      "title": "Генеративно-состязательные сети — Генеративные модели — Фёдор Пахуров"
+    },
+    {
+      "url": "https://fpakhurov.com/ru/notes/generative-models/generative-modeling/",
+      "http_status": 200,
+      "anchors_checked": [],
+      "missing_anchors": [],
+      "title": "Что такое генеративное моделирование — Генеративные модели — Фёдор Пахуров"
+    },
+    {
+      "url": "https://fpakhurov.com/ru/notes/generative-models/latent-diffusion/",
+      "http_status": 200,
+      "anchors_checked": [
+        "editing-with-the-same-model"
+      ],
+      "missing_anchors": [],
+      "title": "Латентная диффузия и Stable Diffusion — Генеративные модели — Фёдор Пахуров"
+    },
+    {
+      "url": "https://fpakhurov.com/ru/notes/generative-models/normalizing-flows/",
+      "http_status": 200,
+      "anchors_checked": [
+        "change-of-variables"
+      ],
+      "missing_anchors": [],
+      "title": "Нормализующие потоки: замена переменных — Генеративные модели — Фёдор Пахуров"
+    },
+    {
+      "url": "https://fpakhurov.com/ru/notes/generative-models/precision-recall/",
+      "http_status": 200,
+      "anchors_checked": [],
+      "missing_anchors": [],
+      "title": "Точность и полнота для генеративных моделей — Генеративные модели — Фёдор Пахуров"
+    },
+    {
+      "url": "https://fpakhurov.com/ru/notes/generative-models/score-matching/",
+      "http_status": 200,
+      "anchors_checked": [],
+      "missing_anchors": [],
+      "title": "Score matching и динамика Ланжевена — Генеративные модели — Фёдор Пахуров"
+    },
+    {
+      "url": "https://fpakhurov.com/ru/notes/generative-models/vae-variants/",
+      "http_status": 200,
+      "anchors_checked": [],
+      "missing_anchors": [],
+      "title": "Варианты VAE: β-VAE и VQ-VAE — Генеративные модели — Фёдор Пахуров"
+    },
+    {
+      "url": "https://fpakhurov.com/ru/notes/generative-models/vae/",
+      "http_status": 200,
+      "anchors_checked": [
+        "the-latent-variable-model-and-its-posterior",
+        "the-reparameterization-trick",
+        "variational-approximation-and-the-elbo"
+      ],
+      "missing_anchors": [],
+      "title": "Вариационные автоэнкодеры — Генеративные модели — Фёдор Пахуров"
+    },
+    {
+      "url": "https://fpakhurov.com/ru/notes/generative-models/wgan/",
+      "http_status": 200,
+      "anchors_checked": [],
+      "missing_anchors": [],
+      "title": "GAN Вассерштейна и ограничение Липшица — Генеративные модели — Фёдор Пахуров"
+    }
+  ]
+}

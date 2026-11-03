@@ -1,0 +1,85 @@
+{
+  "notebook": "01_vae_gan.ipynb",
+  "execution": "full default local CPU run",
+  "elapsed_seconds": 12.27,
+  "python": "3.12.7",
+  "platform": "macOS-26.5.2-arm64-arm-64bit",
+  "packages": {
+    "torch": "2.14.1",
+    "numpy": "2.5.4",
+    "matplotlib": "3.11.2",
+    "scikit-learn": "1.9.1",
+    "nbformat": "5.11.1",
+    "nbclient": "0.11.0"
+  },
+  "code_cells": 13,
+  "executed_code_cells": 13,
+  "plot_count": 17,
+  "error_count": 0,
+  "text_outputs": [
+    {
+      "cell": 1,
+      "text": "Device: cpu; PyTorch: 2.14.1; quick mode: False\n"
+    },
+    {
+      "cell": 3,
+      "text": "Train: torch.Size([1437, 64]); held-out: torch.Size([360, 64])\n"
+    },
+    {
+      "cell": 5,
+      "text": "AE: 45 epochs in 0.5 s; final train SSE/image: 0.861\n"
+    },
+    {
+      "cell": 9,
+      "text": "VAE classes=0: 65 epochs in 0.7 s\n"
+    },
+    {
+      "cell": 11,
+      "text": "Held-out per-pixel MSE: AE=0.0147; VAE=0.0183\n"
+    },
+    {
+      "cell": 13,
+      "text": "Posterior coordinate check: predicted mean, empirical mean, predicted variance, empirical variance\n[[ 1.473  1.488  0.136  0.133]\n [ 0.078  0.08   0.951  0.986]\n [-1.55  -1.551  0.036  0.035]\n [ 0.58   0.59   0.481  0.483]\n [-0.649 -0.644  0.113  0.112]\n [ 0.241  0.244  0.87   0.881]\n [ 0.7    0.702  0.047  0.048]\n [ 0.262  0.267  0.062  0.061]]\n"
+    },
+    {
+      "cell": 15,
+      "text": "Missing-region MSE: zero-fill=0.4986; VAE baseline=0.2507\n"
+    },
+    {
+      "cell": 17,
+      "text": "GAN: 2200 steps in 1.8 s\n"
+    },
+    {
+      "cell": 19,
+      "text": "Probe held-out accuracy: 0.956\n"
+    },
+    {
+      "cell": 21,
+      "text": "VAE classes=10: 50 epochs in 0.6 s\n"
+    },
+    {
+      "cell": 21,
+      "text": "Probe agreement with requested class: 1.000\nProbe agreement is a classroom diagnostic, not a calibrated quality metric.\n"
+    },
+    {
+      "cell": 24,
+      "text": "Cached pretrained inference; CPU forward time: 1.739 s. No training performed.\n"
+    },
+    {
+      "cell": 25,
+      "text": "Live photo inference disabled. The verified cached result is shown above.\n"
+    }
+  ],
+  "notebook_sha256": "57959bebd046c4e4bf5492699fd9330460cb2908f99d89e93d908cc406cf8484",
+  "colab_hosted_runtime_tested": false,
+  "editorial_revision": {
+    "date": "2026-11-04",
+    "code_cells_identical": true,
+    "new_training_run": false,
+    "outputs_preserved_from_sha256": "5676227575f7d983e238334c4fe000874db2771871c5139fb4600230a33142c1",
+    "code_sources_sha256": "0beb4b9f8f7272a30faaf398d0aa3735ee24521d6e4a23ccf81a69963f5ef79d",
+    "markdown_words_before": 2780,
+    "markdown_words_after": 1427,
+    "remote_figure_count": 3
+  }
+}

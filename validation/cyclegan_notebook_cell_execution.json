@@ -1,0 +1,12 @@
+{
+  "tested_branch": "RUN_CYCLEGAN_DEMO=True",
+  "cache": "pre-downloaded official architecture and weights",
+  "input": "embedded notebook photograph",
+  "code_cells_executed": 3,
+  "errors": 0,
+  "elapsed_seconds": 4.41,
+  "outputs": [
+    "Cached pretrained inference; CPU forward time: 1.739 s. No training performed.\n",
+    "New pretrained forward pass: 1.693 s on cpu\n"
+  ]
+}

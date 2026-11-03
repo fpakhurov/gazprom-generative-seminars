@@ -1,0 +1,47 @@
+{
+  "date": "2026-11-04",
+  "figures": [
+    {
+      "id": "vae",
+      "url": "https://arxiv.org/html/1906.02691v3/vae_cartoon.png",
+      "http_status": 200,
+      "content_type": "image/png",
+      "checked_date": "2026-11-04"
+    },
+    {
+      "id": "gan",
+      "url": "https://arxiv.org/html/1511.06434v2/lsun_bedrooms_generator.png",
+      "http_status": 200,
+      "content_type": "image/png",
+      "checked_date": "2026-11-04"
+    },
+    {
+      "id": "cyclegan",
+      "url": "https://arxiv.org/html/1703.10593v7/paired_unpaired2.png",
+      "http_status": 200,
+      "content_type": "image/png",
+      "checked_date": "2026-11-04"
+    },
+    {
+      "id": "flow",
+      "url": "https://lilianweng.github.io/posts/2018-10-13-flow-models/normalizing-flow.png",
+      "http_status": 200,
+      "content_type": "image/png",
+      "checked_date": "2026-11-04"
+    },
+    {
+      "id": "ddpm",
+      "url": "https://hojonathanho.github.io/diffusion/assets/img/pgm_diagram_xarrow.png",
+      "http_status": 200,
+      "content_type": "image/png",
+      "checked_date": "2026-11-04"
+    },
+    {
+      "id": "unet",
+      "url": "https://lmb.informatik.uni-freiburg.de/people/ronneber/u-net/u-net-architecture.png",
+      "http_status": 200,
+      "content_type": "image/png",
+      "checked_date": "2026-11-04"
+    }
+  ]
+}
