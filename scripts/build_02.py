@@ -1,55 +1,46 @@
-"""Build the standalone flows and diffusion seminar notebook."""
-
 from pathlib import Path
-import textwrap
-
 import nbformat as nbf
-
-
-ROOT = Path(__file__).resolve().parents[1]
-cells = []
-
-
+ROOT=Path(__file__).resolve().parents[1]
+cells=[]
 def md(text):
-    cells.append(nbf.v4.new_markdown_cell(textwrap.dedent(text).strip()))
-
-
+    cells.append(nbf.v4.new_markdown_cell(text.strip()))
 def code(text):
-    cells.append(nbf.v4.new_code_cell(textwrap.dedent(text).strip()))
+    cells.append(nbf.v4.new_code_cell(text.strip()))
 
-
-md(r"""
+md(r'''
 # Семинар 2. Нормализующие потоки и диффузионные модели
 
 **Газпром · 90 минут · практикум с готовым кодом**
 
 - **Подготовка:** Python, основы нейросетей.
 - **Цель:** оценивание плотности, генерация и редактирование изображений.
-- **Данные:** двумерные точки; рукописные цифры 8×8 из scikit-learn.
+- **Данные:** двумерные точки; рукописные цифры 28×28 MNIST.
 - **Формат:** выполнение ячеек, анализ графиков, изменение параметров.
-- **Запуск:** загрузить notebook в [Colab](https://colab.research.google.com/) → «Выполнить все». CPU достаточно; GPU необязателен. Данные доступны без скачивания.
-- **Область применимости:** учебные эксперименты; качество на фотографиях и производственных данных не оценивается.
+- **Запуск:** загрузить notebook в [Colab](https://colab.research.google.com/) → «Выполнить все». Для обучения свёрточных сетей рекомендуется GPU; CPU поддерживается. MNIST загружается один раз (~12 MB).
+- **Область применимости:** учебные эксперименты; эффективность на производственных данных не оценивается.
 
 | Минуты | Основной материал |
 |---|---|
 | 0–8 | Связь с VAE/GAN; гауссовская модель |
-| 8–30 | RealNVP: преобразования, плотность, обратимость |
-| 30–60 | DDPM: зашумление, обучение, генерация |
-| 60–80 | Image-to-image: эксперимент с уровнем шума |
-| 80–90 | Сравнение моделей; контрольные вопросы |
+| 8–28 | RealNVP: плотность, обратимость, условный вариант |
+| 28–55 | DDPM: зашумление, обучение, генерация |
+| 55–65 | Класс и classifier-free guidance |
+| 65–80 | Один опыт: image-to-image или inpainting |
+| 80–90 | Сравнение четырёх семейств; вопросы |
 
 Дополнительно: число слоёв потока, якобиан, коэффициенты posterior, inpainting.
 «Выполнить все» выполняет также дополнительные ячейки.
-""")
+''')
 
-md(r"""
+md(r'''
 ## 0. Среда и воспроизводимость
 
 - Фиксированы seed и два CPU-потока; версии выводятся ниже.
 - Побитовое совпадение разных GPU и версий не гарантируется.
 - Отсутствующие библиотеки устанавливаются автоматически.
-""")
-code("""
+''')
+
+code(r'''
 import importlib.util
 import os
 import subprocess
@@ -69,7 +60,7 @@ import sklearn
 import torch
 from torch import nn
 from torch.nn import functional as F
-from sklearn.datasets import load_digits, make_moons
+from sklearn.datasets import make_moons
 from sklearn.model_selection import train_test_split
 
 SEED = 42
@@ -79,13 +70,13 @@ torch.manual_seed(SEED)
 torch.set_num_threads(2)
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 QUICK = os.environ.get("SEMINAR_QUICK", "0") == "1"
-plt.rcParams.update({"figure.figsize": (9, 3), "font.size": 11, "axes.spines.top": False, "axes.spines.right": False})
+plt.rcParams.update({"figure.figsize": (9, 3), "font.size": 11, "figure.dpi": 140, "axes.spines.top": False, "axes.spines.right": False})
 print("Python:", sys.version.split()[0])
 print("PyTorch:", torch.__version__, "NumPy:", np.__version__, "scikit-learn:", sklearn.__version__)
 print("Device:", device, "Quick smoke mode:", QUICK)
-""")
+''')
 
-md(r"""
+md(r'''
 ## 1. Оценивание двумерного распределения
 
 - **Данные:** точки $x=(x_1,x_2)$; две зашумлённые полуокружности.
@@ -94,10 +85,11 @@ md(r"""
 - **Критерий:** отрицательное логарифмическое правдоподобие (NLL) на test.
 
 Теория: [Генеративное моделирование](https://fpakhurov.com/ru/notes/generative-models/generative-modeling/).
-""")
-code("""
+''')
+
+code(r'''
 moons, moon_labels = make_moons(n_samples=5000, noise=0.07, random_state=SEED)
-moon_train_np, moon_test_np = train_test_split(moons, test_size=0.2, random_state=SEED)
+moon_train_np, moon_test_np, moon_train_y, moon_test_y = train_test_split(moons, moon_labels, test_size=0.2, random_state=SEED)
 moon_mean = moon_train_np.mean(axis=0)
 moon_scale = moon_train_np.std(axis=0)
 moon_train = torch.tensor((moon_train_np - moon_mean) / moon_scale, dtype=torch.float32, device=device)
@@ -117,17 +109,18 @@ for ax, title in zip(axes, ["Held-out data", "Gaussian baseline"]):
 plt.tight_layout()
 plt.show()
 print(f"Gaussian held-out NLL: {gaussian_nll:.4f} nats per 2D point")
-""")
-md(r"""
+''')
+
+md(r'''
 - **Ограничение базовой модели:** одна нормаль не воспроизводит изогнутую форму распределения.
 - **Нормализующий поток:** обратимое преобразование $z=f_\theta(x)$ к $\mathcal N(0,I)$.
 - **Генерация:** $z\sim\mathcal N(0,I)$, затем $x=f_\theta^{-1}(z)$.
 - **Размерность:** $x,z\in\mathbb R^2$; сжатия размерности нет.
 
 Теория: [Нормализующие потоки](https://fpakhurov.com/ru/notes/generative-models/normalizing-flows/).
-""")
+''')
 
-md(r"""
+md(r'''
 ## 2. Замена переменных и архитектура RealNVP
 
 <img src="https://lilianweng.github.io/posts/2018-10-13-flow-models/normalizing-flow.png" alt="Normalizing flow: composition of invertible transformations" width="720">
@@ -154,8 +147,9 @@ $$x_1=z_1,\qquad x_2=(z_2-b_\theta(z_1))e^{-s_\theta(z_1)}.$$
 - Чередование масок изменяет обе координаты; `mask=1` сохраняет координату.
 
 Теория: [Замена переменных](https://fpakhurov.com/ru/notes/generative-models/normalizing-flows/#change-of-variables), [coupling NICE/RealNVP](https://fpakhurov.com/ru/notes/generative-models/flow-architectures/#a-coupling-layers-nice-realnvp).
-""")
-code("""
+''')
+
+code(r'''
 class AffineCoupling(nn.Module):
     def __init__(self, mask, width=64):
         super().__init__()
@@ -213,16 +207,17 @@ class RealNVP(nn.Module):
 
 flow = RealNVP(n_layers=8).to(device)
 print("Input: [batch, 2]; code: [batch, 2]; logdet: [batch]")
-""")
+''')
 
-md(r"""
+md(r'''
 ## 3. Обучение и проверка потока
 
 - **Оптимизация:** случайные train-батчи; минимизация NLL.
 - **Оценивание:** test NLL относительно гауссовской модели; test исключён из градиентов.
 - **Визуализация:** коды test-объектов и генерация из нормального распределения.
-""")
-code("""
+''')
+
+code(r'''
 FLOW_STEPS = 120 if QUICK else 1600
 flow_optimizer = torch.optim.Adam(flow.parameters(), lr=1e-3)
 flow_history = []
@@ -256,13 +251,15 @@ axes[2].scatter(*flow_samples.cpu().numpy().T, s=4, alpha=0.5, color="tab:orange
 axes[2].set(title="Generated points", xlim=(-3, 3), ylim=(-3, 3), aspect="equal")
 plt.tight_layout()
 plt.show()
-""")
-md(r"""
+''')
+
+md(r'''
 - **Обратимость:** проверка `inverse(forward(x)) ≈ x`.
 - **Дополнительно:** сравнение аналитического logdet с полным якобианом autograd.
 - **Визуализация:** одинаковый цвет соответствует одним точкам на последовательных стадиях преобразования.
-""")
-code("""
+''')
+
+code(r'''
 with torch.no_grad():
     probe = moon_test[:32]
     probe_z, forward_logdet = flow(probe)
@@ -289,8 +286,45 @@ for ax, stage in zip(axes, [0, 2, 4, 6, 8]):
     ax.set(title=f"Inverse layers: {stage}", xlim=(-3.5, 3.5), ylim=(-3.5, 3.5), aspect="equal")
 plt.tight_layout()
 plt.show()
-""")
-md(r"""
+''')
+
+md(r'''
+### Условный поток: отдельное распределение для каждого класса
+
+- Условие $y$ выбирает один из двух обучаемых потоков: $p(x\mid y)$.
+- Одинаковые базовые точки $z$ преобразуются в разные классы.
+- Сравнивать с безусловной моделью следует маргинальную плотность $p(x)=\sum_y p(y)p(x\mid y)$, а не $p(x\mid y)$.
+- Это простая реализация условия через выбор параметров; общая сеть с embedding является альтернативой.
+''')
+
+code(r'''
+class_flows = nn.ModuleList([RealNVP(n_layers=4), RealNVP(n_layers=4)]).to(device)
+class_optimizer = torch.optim.Adam(class_flows.parameters(), lr=1e-3)
+train_class = torch.tensor(moon_train_y, dtype=torch.long, device=device)
+class_steps = 60 if QUICK else 1000
+for step in range(class_steps):
+    loss = 0.0
+    for label in range(2):
+        group = moon_train[train_class == label]
+        chosen = group[torch.randint(len(group), (128,), device=device)]
+        loss = loss - class_flows[label].log_prob(chosen).mean()
+    class_optimizer.zero_grad(set_to_none=True)
+    loss.backward(); class_optimizer.step()
+with torch.no_grad():
+    fixed_base = torch.randn(600, 2, device=device)
+    class_samples = [model.inverse(fixed_base)[0].cpu().numpy() for model in class_flows]
+    class_prior = torch.bincount(train_class, minlength=2).float() / len(train_class)
+    log_marginal = torch.logsumexp(torch.stack([model.log_prob(moon_test) + class_prior[label].log() for label, model in enumerate(class_flows)], dim=1), dim=1)
+    conditional_flow_marginal_nll = -log_marginal.mean().item()
+fig, axes = plt.subplots(1, 2, figsize=(9, 3.5))
+for label, axis in enumerate(axes):
+    axis.scatter(*class_samples[label].T, s=5, alpha=0.5)
+    axis.set(title=f"Flow conditioned on class {label}", xlim=(-3,3), ylim=(-3,3), aspect="equal")
+plt.tight_layout(); plt.show()
+print(f"Conditional-flow mixture held-out marginal NLL: {conditional_flow_marginal_nll:.4f}")
+''')
+
+md(r'''
 - **Ограничения:** специальная обратимая архитектура; положительная плотность при нормальном prior. Данные имеют ненулевой шум.
 - **Дополнительный эксперимент:** 8 → 2 слоя; сравнить test NLL и генерацию. Для графика стадий задать `[0, 1, 2]` и три оси.
 
@@ -300,16 +334,16 @@ md(r"""
 </details>
 
 Теория: [Архитектуры потоков](https://fpakhurov.com/ru/notes/generative-models/flow-architectures/).
-""")
+''')
 
-md(r"""
+md(r'''
 ## 4. DDPM: прямой процесс
 
 <img src="https://hojonathanho.github.io/diffusion/assets/img/pgm_diagram_xarrow.png" alt="DDPM: forward noising and learned reverse Markov chains" width="720">
 
 *Прямой и обратный процессы DDPM. [Ho, Jain, Abbeel (2020)](https://hojonathanho.github.io/diffusion/).*
 
-- **Данные:** $x_0\in[-1,1]^{64}$ — развёрнутое изображение 8×8.
+- **Данные:** $x_0\in[-1,1]^{784}$ — развёрнутое изображение 28×28.
 - **Переход:** $q(x_k\mid x_{k-1})=\mathcal N(\sqrt{\alpha_k}x_{k-1},\beta_k I)$.
 - $k=1,\ldots,T$ — шаг; $\beta_k$ — дисперсия шума; $\alpha_k=1-\beta_k$.
 - $\bar\alpha_k=\prod_{j=1}^k\alpha_j$, $\bar\alpha_0=1$.
@@ -323,18 +357,79 @@ $$x_k=\sqrt{\bar\alpha_k}x_0+\sqrt{1-\bar\alpha_k}\,\varepsilon,
 - **Индексы Python:** `t=k-1`; `q_sample(x0, t=0)` соответствует первому зашумлению.
 
 Теория: [Прямой переход к произвольному шагу](https://fpakhurov.com/ru/notes/generative-models/ddpm-forward-process/#the-jump-from-x-to-any-step).
-""")
-code("""
-digits = load_digits()
-digit_train_np, digit_test_np = train_test_split(digits.data / 16.0, test_size=0.2, random_state=SEED, stratify=digits.target)
+''')
+
+code(r'''
+"""Load native-resolution MNIST with a small verified download cache."""
+
+from pathlib import Path
+import gzip
+import hashlib
+import struct
+import urllib.request
+
+import numpy as np
+from sklearn.model_selection import train_test_split
+
+MNIST_FILES = {
+    "train-images-idx3-ubyte.gz": "f68b3c2dcbeaaa9fbdd348bbdeb94873",
+    "train-labels-idx1-ubyte.gz": "d53e105ee54ea40749a09fcbcd1e9432",
+    "t10k-images-idx3-ubyte.gz": "9fb629c4189551a2d022fa330f9573f3",
+    "t10k-labels-idx1-ubyte.gz": "ec29112dd5afa0611ce80d1b7f02629c",
+}
+
+
+def load_mnist(cache="data/mnist", train_limit=12000, test_limit=2000, seed=42):
+    cache = Path(cache)
+    cache.mkdir(parents=True, exist_ok=True)
+    arrays = {}
+    for filename, expected in MNIST_FILES.items():
+        path = cache / filename
+        if not path.exists():
+            url = "https://storage.googleapis.com/cvdf-datasets/mnist/" + filename
+            with urllib.request.urlopen(url, timeout=90) as response:
+                path.write_bytes(response.read())
+        if hashlib.md5(path.read_bytes()).hexdigest() != expected:
+            raise ValueError(f"MNIST checksum mismatch: {filename}; remove the cached file and rerun")
+        payload = gzip.decompress(path.read_bytes())
+        magic, count = struct.unpack(">II", payload[:8])
+        if magic == 2051:
+            rows, cols = struct.unpack(">II", payload[8:16])
+            assert (rows, cols) == (28, 28)
+            values = np.frombuffer(payload, dtype=np.uint8, offset=16).reshape(count, rows, cols)
+        elif magic == 2049:
+            values = np.frombuffer(payload, dtype=np.uint8, offset=8)
+            assert len(values) == count
+        else:
+            raise ValueError(f"Unexpected MNIST magic: {magic}")
+        arrays[filename] = values
+
+    def subset(images, labels, limit):
+        assert len(images) == len(labels)
+        indices, _ = train_test_split(np.arange(len(labels)), train_size=limit,
+                                      stratify=labels, random_state=seed)
+        return images[indices].astype("float32").reshape(-1, 784) / 255.0, labels[indices].astype("int64")
+
+    train_x, train_y = subset(arrays["train-images-idx3-ubyte.gz"], arrays["train-labels-idx1-ubyte.gz"], train_limit)
+    test_x, test_y = subset(arrays["t10k-images-idx3-ubyte.gz"], arrays["t10k-labels-idx1-ubyte.gz"], test_limit)
+    return train_x, test_x, train_y, test_y
+
+requested_device = os.environ.get("SEMINAR_DIFFUSION_DEVICE")
+if requested_device:
+    device = torch.device(requested_device)
+print("Diffusion training device:", device)
+IMAGE_SIZE = 28
+INPUT_DIM = IMAGE_SIZE ** 2
+digit_train_np, digit_test_np, train_digit_labels, test_digit_labels = load_mnist(train_limit=1000 if QUICK else 12000, test_limit=400 if QUICK else 2000, seed=SEED)
 x_train = torch.tensor(digit_train_np * 2 - 1, dtype=torch.float32, device=device)
 x_test = torch.tensor(digit_test_np * 2 - 1, dtype=torch.float32, device=device)
-
+y_train = torch.tensor(train_digit_labels, dtype=torch.long, device=device)
+y_test = torch.tensor(test_digit_labels, dtype=torch.long, device=device)
 def image_grid(images, title, cols=8, value_range=(-1, 1)):
     images = images.detach().cpu().numpy() if torch.is_tensor(images) else np.asarray(images)
-    images = images.reshape(-1, 8, 8)
+    images = images.reshape(-1, IMAGE_SIZE, IMAGE_SIZE)
     rows = math.ceil(len(images) / cols)
-    fig, axes = plt.subplots(rows, cols, figsize=(cols * 1.1, rows * 1.1), squeeze=False)
+    fig, axes = plt.subplots(rows, cols, figsize=(cols * 1.3, rows * 1.4), squeeze=False)
     for ax in axes.flat:
         ax.axis("off")
     for ax, image in zip(axes.flat, images):
@@ -343,7 +438,7 @@ def image_grid(images, title, cols=8, value_range=(-1, 1)):
     plt.tight_layout()
     plt.show()
 
-image_grid(x_test[:24], "Held-out images: 8 x 8 pixels")
+image_grid(x_test[:24], "Held-out images: native MNIST 28 x 28 pixels")
 print("Train:", tuple(x_train.shape), "Test:", tuple(x_test.shape))
 
 T = 100
@@ -373,7 +468,7 @@ for row, k in enumerate([0, 10, 30, 60, 100]):
     else:
         corrupted = q_sample(x_test[:8], torch.full((8,), k - 1, dtype=torch.long, device=device), fixed_noise)
     for col, ax in enumerate(axes[row]):
-        ax.imshow(corrupted[col].detach().cpu().reshape(8, 8), cmap="gray", vmin=-1, vmax=1)
+        ax.imshow(corrupted[col].detach().cpu().reshape(IMAGE_SIZE, IMAGE_SIZE), cmap="gray", vmin=-1, vmax=1)
         ax.set_xticks([])
         ax.set_yticks([])
         if col == 0:
@@ -382,78 +477,129 @@ fig.suptitle("Forward noising; shared noise for visualization")
 plt.tight_layout()
 plt.show()
 print(f"Terminal alpha_bar: {alpha_bars[-1].item():.2e}")
-""")
-md(r"""
+''')
+
+md(r'''
 - Показаны маргинальные распределения $q(x_k\mid x_0)$ с общим шумом для визуального сравнения.
 - Это не одна марковская траектория.
 - При малом $\bar\alpha_T$ распределение $x_T$ приближается к $\mathcal N(0,I)$.
-""")
+''')
 
-md(r"""
-## 5. Предсказание шума: архитектура и функция потерь
+md(r'''
+## 5. Условное предсказание шума и classifier-free guidance
 
 <img src="https://lmb.informatik.uni-freiburg.de/people/ronneber/u-net/u-net-architecture.png" alt="Original U-Net: contracting and expanding paths with skip connections" width="720">
 
-*Исходная U-Net для сегментации: [Ronneberger et al. (2015)](https://lmb.informatik.uni-freiburg.de/people/ronneber/u-net/). В DDPM используют модификации с кодированием времени; в практикуме — MLP.*
+*Исходная U-Net для сегментации: [Ronneberger et al. (2015)](https://lmb.informatik.uni-freiburg.de/people/ronneber/u-net/). В DDPM используют модификации с кодированием времени; в практикуме — компактная условная U-Net.*
 
-- **Архитектура:** MLP; синусоидальное кодирование времени.
-- **Вход:** `x_t: [batch, 64]`, `t: [batch]`; **выход:** `eps_pred: [batch, 64]`.
+- **Архитектура:** U-Net; синусоидальное кодирование времени.
+- **Вход:** `x_t: [batch, 784]`, `t: [batch]`, `y: [batch]`; **выход:** `eps_pred: [batch, 784]`.
 - **Цель DDPM:**
 
-$$\min_\theta\;\mathbb E_{x_0,k,\varepsilon}
-\left[\frac1{64}\|\varepsilon-\varepsilon_\theta(x_k,k)\|_2^2\right].$$
+$$\min_\theta\;\mathbb E_{(x_0,y),k,\varepsilon}
+\left[\frac1{784}\|\varepsilon-\varepsilon_\theta(x_k,k,y)\|_2^2\right].$$
 
 - $k$ выбирается равномерно; $\varepsilon_\theta$ — предсказание шума сетью.
 - Невзвешенный MSE связан с вариационным обучением, но численно не равен NLL или ELBO.
-- Для крупных изображений применяются более выразительные архитектуры, включая U-Net.
+- В 15% примеров метка заменяется пустым условием; одна сеть обучает условную и безусловную ветви.
 
 Теория: [Предсказание шума](https://fpakhurov.com/ru/notes/generative-models/ddpm-training-objective/#from-means-to-noise), [Score matching](https://fpakhurov.com/ru/notes/generative-models/score-matching/).
-""")
-code("""
-class EpsilonMLP(nn.Module):
-    def __init__(self, width=256, time_dim=64):
+
+
+- Условие: класс $y\in\{0,\ldots,9\}$; обучается $\varepsilon_\theta(x_k,k,y)$.
+- С вероятностью 0.15 метка заменяется пустым условием; одна сеть обучает условное и безусловное предсказания.
+- Guidance: $\hat\varepsilon=\varepsilon_\theta(x_k,k,\varnothing)+w[\varepsilon_\theta(x_k,k,y)-\varepsilon_\theta(x_k,k,\varnothing)]$.
+- Первоисточник: [Ho, Salimans — Classifier-Free Diffusion Guidance](https://arxiv.org/abs/2207.12598).
+- $w=0$: безусловная генерация; $w=1$: обычная условная; $w>1$: усиление условия с возможной потерей разнообразия.
+- Шум сохраняет вариативность внутри класса. Среднее состояние при фиксированном $y$ не является единственным правильным изображением.
+''')
+
+code(r'''
+import copy
+
+class TimeBlock(nn.Module):
+    def __init__(self, in_channels, out_channels, embedding_dim=128):
+        super().__init__()
+        self.norm1 = nn.GroupNorm(4, in_channels)
+        self.conv1 = nn.Conv2d(in_channels, out_channels, 3, padding=1)
+        self.condition = nn.Linear(embedding_dim, out_channels)
+        self.norm2 = nn.GroupNorm(4, out_channels)
+        self.conv2 = nn.Conv2d(out_channels, out_channels, 3, padding=1)
+        self.skip = nn.Conv2d(in_channels, out_channels, 1) if in_channels != out_channels else nn.Identity()
+    def forward(self, x, embedding):
+        h = self.conv1(F.silu(self.norm1(x)))
+        h = h + self.condition(embedding)[:, :, None, None]
+        return self.skip(x) + self.conv2(F.silu(self.norm2(h)))
+
+class ConditionalUNet(nn.Module):
+    def __init__(self, time_dim=64):
         super().__init__()
         self.register_buffer("frequencies", torch.exp(torch.linspace(math.log(1.0), math.log(1000.0), time_dim // 2)))
-        self.input_layer = nn.Linear(64 + time_dim, width)
-        self.hidden1 = nn.Linear(width, width)
-        self.hidden2 = nn.Linear(width, width)
-        self.output_layer = nn.Linear(width, 64)
-
-    def forward(self, x_t, t):
+        self.time_net = nn.Sequential(nn.Linear(time_dim, 128), nn.SiLU(), nn.Linear(128, 128))
+        self.class_embedding = nn.Embedding(11, 128)
+        self.input = nn.Conv2d(1, 16, 3, padding=1)
+        self.block1 = TimeBlock(16, 16)
+        self.down1 = nn.Conv2d(16, 32, 4, 2, 1)
+        self.block2 = TimeBlock(32, 32)
+        self.down2 = nn.Conv2d(32, 64, 4, 2, 1)
+        self.middle = TimeBlock(64, 64)
+        self.up1 = nn.Conv2d(64, 32, 3, padding=1)
+        self.decode1 = TimeBlock(64, 32)
+        self.up2 = nn.Conv2d(32, 16, 3, padding=1)
+        self.decode2 = TimeBlock(32, 16)
+        self.output = nn.Conv2d(16, 1, 3, padding=1)
+    def forward(self, x_t, t, labels=None):
+        if labels is None:
+            labels = torch.full((len(x_t),), 10, dtype=torch.long, device=x_t.device)
         angles = (t.float() / (T - 1)).unsqueeze(-1) * self.frequencies
-        embedding = torch.cat([angles.sin(), angles.cos()], dim=-1)
-        h = F.silu(self.input_layer(torch.cat([x_t, embedding], dim=-1)))
-        h = h + F.silu(self.hidden1(h))
-        h = h + F.silu(self.hidden2(h))
-        return self.output_layer(h)
+        embedding = self.time_net(torch.cat([angles.sin(), angles.cos()], dim=-1)) + self.class_embedding(labels)
+        h1 = self.block1(self.input(x_t.reshape(-1, 1, IMAGE_SIZE, IMAGE_SIZE)), embedding)
+        h2 = self.block2(self.down1(h1), embedding)
+        h3 = self.middle(self.down2(h2), embedding)
+        h = self.up1(F.interpolate(h3, size=h2.shape[-2:], mode="nearest"))
+        h = self.decode1(torch.cat([h, h2], dim=1), embedding)
+        h = self.up2(F.interpolate(h, size=h1.shape[-2:], mode="nearest"))
+        return self.output(self.decode2(torch.cat([h, h1], dim=1), embedding)).flatten(1)
 
-denoiser = EpsilonMLP().to(device)
-diffusion_optimizer = torch.optim.AdamW(denoiser.parameters(), lr=1e-3, weight_decay=1e-4)
-DDPM_STEPS = 120 if QUICK else 16000
+denoiser = ConditionalUNet().to(device)
+ema_denoiser = copy.deepcopy(denoiser).eval().requires_grad_(False)
+diffusion_optimizer = torch.optim.AdamW(denoiser.parameters(), lr=3e-4, weight_decay=1e-4)
+DDPM_STEPS = 120 if QUICK else 6000
 ddpm_history = []
 ddpm_start = time.perf_counter()
 denoiser.train()
 for step in range(DDPM_STEPS):
-    indices = torch.randint(len(x_train), (128,), device=device)
+    indices = torch.randint(len(x_train), (64,), device=device)
     x0_batch = x_train[indices]
     t_batch = torch.randint(T, (len(x0_batch),), device=device)
     noise = torch.randn_like(x0_batch)
     x_t = q_sample(x0_batch, t_batch, noise)
-    eps_pred = denoiser(x_t, t_batch)
+    labels_batch = y_train[indices].clone()
+    labels_batch[torch.rand(len(indices), device=device) < 0.15] = 10
+    eps_pred = denoiser(x_t, t_batch, labels_batch)
     loss = F.mse_loss(eps_pred, noise)
     diffusion_optimizer.zero_grad(set_to_none=True)
     loss.backward()
     torch.nn.utils.clip_grad_norm_(denoiser.parameters(), 1.0)
     diffusion_optimizer.step()
+    with torch.no_grad():
+        for averaged, current in zip(ema_denoiser.parameters(), denoiser.parameters()):
+            averaged.lerp_(current, 0.005)
     if step % 80 == 0:
         ddpm_history.append((step, loss.item()))
+    if (step + 1) % 1000 == 0:
+        print(f"DDPM step {step + 1}/{DDPM_STEPS}; noise MSE: {loss.item():.4f}", flush=True)
 denoiser.eval()
+checkpoint_dir = Path("checkpoints")
+checkpoint_dir.mkdir(exist_ok=True)
+torch.save(ema_denoiser.state_dict(), checkpoint_dir / "mnist_conditional_ddpm.pt")
 ddpm_seconds = time.perf_counter() - ddpm_start
 with torch.no_grad():
     eval_t = torch.randint(T, (len(x_test),), device=device)
     eval_noise = torch.randn_like(x_test)
     eval_xt = q_sample(x_test, eval_t, eval_noise)
-    test_noise_mse = F.mse_loss(denoiser(eval_xt, eval_t), eval_noise).item()
+    eval_prediction = torch.cat([ema_denoiser(eval_xt[i:i+128], eval_t[i:i+128], y_test[i:i+128]) for i in range(0, len(x_test), 128)])
+    test_noise_mse = F.mse_loss(eval_prediction, eval_noise).item()
     zero_noise_mse = eval_noise.square().mean().item()
 plt.plot(*np.array(ddpm_history).T)
 plt.title("DDPM training: epsilon prediction")
@@ -462,23 +608,26 @@ plt.ylabel("Noise MSE per pixel")
 plt.show()
 print(f"DDPM training: {ddpm_seconds:.1f} seconds")
 print(f"Held-out noise MSE: {test_noise_mse:.4f}; zero predictor baseline: {zero_noise_mse:.4f}")
-""")
-md(r"""
+''')
+
+md(r'''
 - **Диагностика:** test MSE отдельно для нескольких уровней шума.
 - Низкий MSE предсказания шума не гарантирует точное восстановление оригинала, качество или разнообразие генерации.
-""")
-code("""
+''')
+
+code(r'''
 noise_mse_by_step = {}
 with torch.no_grad():
     for k in [1, 10, 30, 60, 90, 100]:
         level_t = torch.full((len(x_test),), k - 1, dtype=torch.long, device=device)
         level_noise = torch.randn_like(x_test)
         level_xt = q_sample(x_test, level_t, level_noise)
-        noise_mse_by_step[k] = F.mse_loss(denoiser(level_xt, level_t), level_noise).item()
+        level_prediction = torch.cat([ema_denoiser(level_xt[i:i+128], level_t[i:i+128], y_test[i:i+128]) for i in range(0, len(x_test), 128)])
+        noise_mse_by_step[k] = F.mse_loss(level_prediction, level_noise).item()
 print("Held-out noise MSE by k:", {k: round(v, 4) for k, v in noise_mse_by_step.items()})
-""")
+''')
 
-md(r"""
+md(r'''
 ## 6. Обратный процесс и апостериорное распределение
 
 **При известных $x_0,x_k$:**
@@ -495,25 +644,29 @@ $$\tilde\beta_k=\beta_k\frac{1-\bar\alpha_{k-1}}{1-\bar\alpha_k}.$$
 Коэффициенты получаются из произведения гауссовских плотностей прямого процесса.
 </details>
 
-**При генерации:** оригинал неизвестен; используется оценка
+**При генерации:** оригинал неизвестен; используется оценка (ниже записан безусловный случай)
 
 $$\hat x_0=\frac{x_k-\sqrt{1-\bar\alpha_k}\,\varepsilon_\theta(x_k,k)}{\sqrt{\bar\alpha_k}}.$$
 
+- Для условия $y$ в формуле подставляется условное или guided-предсказание шума; переход имеет вид $p_\theta(x_{k-1}\mid x_k,y)$.
 - Среднее $p_\theta(x_{k-1}\mid x_k)$ использует $\hat x_0$; дисперсия фиксирована: $\tilde\beta_k$.
 - `clamp(-1, 1)` ограничивает оценку диапазоном данных.
 - При $k=1$ дисперсия равна нулю; дополнительный шум отсутствует.
 - Обученный переход приближённый; он не совпадает с точным posterior по одному $x_k$.
 
 Теория: [Истинный posterior](https://fpakhurov.com/ru/notes/generative-models/ddpm-training-objective/#the-true-posterior), [обратная цепочка](https://fpakhurov.com/ru/notes/generative-models/ddpm-training-objective/#sampling-running-the-chain-backwards).
-""")
-code("""
+''')
+
+code(r'''
 def x0_from_epsilon(x_t, t, epsilon):
     return (x_t - extract((1 - alpha_bars).sqrt(), t) * epsilon) / extract(alpha_bars.sqrt(), t)
 
 
 @torch.no_grad()
-def reverse_step(x_t, t):
-    eps_pred = denoiser(x_t, t)
+def reverse_step(x_t, t, labels=None, guidance=0.0):
+    eps_pred = ema_denoiser(x_t, t)
+    if labels is not None:
+        eps_pred = eps_pred + guidance * (ema_denoiser(x_t, t, labels) - eps_pred)
     x0_pred = x0_from_epsilon(x_t, t, eps_pred).clamp(-1, 1)
     mean = extract(posterior_coef_x0, t) * x0_pred + extract(posterior_coef_xt, t) * x_t
     noise = torch.randn_like(x_t)
@@ -522,14 +675,14 @@ def reverse_step(x_t, t):
 
 
 @torch.no_grad()
-def sample_ddpm(count=32, initial=None, start_t=None, snapshots=False):
+def sample_ddpm(count=32, initial=None, start_t=None, snapshots=False, labels=None, guidance=0.0):
     denoiser.eval()
-    current = torch.randn(count, 64, device=device) if initial is None else initial.clone()
+    current = torch.randn(count, INPUT_DIM, device=device) if initial is None else initial.clone()
     start_t = T - 1 if start_t is None else start_t
     trace = {start_t + 1: current.detach().clone()}
     for step_t in range(start_t, -1, -1):
         t = torch.full((len(current),), step_t, dtype=torch.long, device=device)
-        current = reverse_step(current, t)
+        current = reverse_step(current, t, labels=labels, guidance=guidance)
         if snapshots and step_t in [75, 50, 25, 10, 0]:
             trace[step_t] = current.detach().clone()
     return current, trace
@@ -546,15 +699,16 @@ assert torch.isfinite(posterior_variance).all() and (posterior_variance >= 0).al
 print(f"Known-noise x0 reconstruction error: {oracle_x0_error:.2e}")
 
 generated_digits, generation_trace = sample_ddpm(count=32, snapshots=True)
-assert generated_digits.shape == (32, 64) and torch.isfinite(generated_digits).all()
+assert generated_digits.shape == (32, INPUT_DIM) and torch.isfinite(generated_digits).all()
 image_grid(generated_digits, "Unconditional DDPM samples; inspect quality and variety")
-""")
-code("""
+''')
+
+code(r'''
 trace_steps = list(generation_trace)
 fig, axes = plt.subplots(len(trace_steps), 8, figsize=(9, 1.1 * len(trace_steps)))
 for row, k in enumerate(trace_steps):
     for col in range(8):
-        axes[row, col].imshow(generation_trace[k][col].cpu().reshape(8, 8), cmap="gray", vmin=-1, vmax=1)
+        axes[row, col].imshow(generation_trace[k][col].cpu().reshape(IMAGE_SIZE, IMAGE_SIZE), cmap="gray", vmin=-1, vmax=1)
         axes[row, col].set_xticks([])
         axes[row, col].set_yticks([])
         if col == 0:
@@ -562,8 +716,35 @@ for row, k in enumerate(trace_steps):
 fig.suptitle("One reverse trajectory: independent noise is added between steps")
 plt.tight_layout()
 plt.show()
-""")
-md(r"""
+''')
+
+md(r'''
+### Сравнение условий при одинаковом начальном шуме
+
+- Каждому столбцу соответствует один начальный шум $x_T$.
+- Строки: метки 0–9; условие передаётся на каждом обратном шаге.
+- Сравнить $w=0,1,2$. Усиление условия не гарантирует устранение артефактов.
+- Метка задаёт класс; гауссовский шум описывает разнообразие внутри него.
+''')
+
+code(r'''
+from sklearn.linear_model import LogisticRegression
+probe_classifier = LogisticRegression(max_iter=300, random_state=SEED)
+probe_classifier.fit(digit_train_np, train_digit_labels)
+print(f"MNIST held-out probe accuracy: {probe_classifier.score(digit_test_np, test_digit_labels):.3f}")
+with torch.no_grad():
+    fixed_start = torch.randn(8, INPUT_DIM, device=device)
+    repeated_start = fixed_start.repeat(10, 1)
+    requested = torch.arange(10, device=device).repeat_interleave(8)
+    torch.manual_seed(SEED + 100)
+    conditional_digits, _ = sample_ddpm(initial=repeated_start, labels=requested, guidance=1.5)
+image_grid(conditional_digits, "Conditional MNIST DDPM: fixed initial noise by column, class by row", cols=8)
+class_agreement = float((probe_classifier.predict(((conditional_digits.cpu().numpy()+1)/2)) == requested.cpu().numpy()).mean())
+print(f"Conditional DDPM probe class agreement: {class_agreement:.3f}")
+print("Class agreement does not measure diversity or guarantee sample quality.")
+''')
+
+md(r'''
 - **Анализ генерации:** распознаваемость цифр, повторения, смешение классов. Одна решётка не подтверждает покрытие распределения.
 - **Дополнительный эксперимент:** заменить `eps_pred` на `torch.zeros_like(x_t)`; сравнить при одинаковом seed.
 
@@ -573,9 +754,9 @@ md(r"""
 </details>
 
 Удаление случайной добавки или пропуск итераций меняет сэмплер; такая модификация сама по себе не реализует DDIM.
-""")
+''')
 
-md(r"""
+md(r'''
 ## 7. Image-to-image: редактирование через зашумление
 
 - **Метод:** зашумление входа до уровня $k$ → обратный DDPM; учебный вариант [SDEdit](https://arxiv.org/abs/2108.01073).
@@ -585,27 +766,32 @@ md(r"""
 - **Ограничение:** генеративный prior допускает изменение класса; точное условное восстановление не гарантируется.
 
 Теория: [Редактирование с помощью диффузии](https://fpakhurov.com/ru/notes/generative-models/latent-diffusion/#editing-with-the-same-model), [DragGAN и DragDiffusion](https://fpakhurov.com/ru/notes/generative-models/drag-editing/).
-""")
-code("""
+
+
+- В данном контролируемом опыте известна метка test-изображения; она передаётся модели как дополнительное условие.
+- Дополнительный опыт: сохранить зашумлённый вход, заменить правильную метку неверной; проверить изменение содержания. Условие полезно при корректной дополнительной информации.
+''')
+
+code(r'''
 torch.manual_seed(SEED + 7)
 clean_edit = x_test[:8].clone()
-damaged_edit = clean_edit.reshape(-1, 8, 8).clone()
-damaged_edit[:, 3:5, 2:6] = 1.0
-damaged_edit = damaged_edit.reshape(-1, 64)
+damaged_edit = clean_edit.reshape(-1, IMAGE_SIZE, IMAGE_SIZE).clone()
+damaged_edit[:, 12:16, 8:20] = 1.0
+damaged_edit = damaged_edit.reshape(-1, INPUT_DIM)
 edit_noise = torch.randn_like(damaged_edit)
 edit_results = {}
 EDIT_LEVELS = [10, 35, 70]
 for k in EDIT_LEVELS:
     t = torch.full((len(damaged_edit),), k - 1, dtype=torch.long, device=device)
     initial = q_sample(damaged_edit, t, edit_noise)
-    edited, _ = sample_ddpm(initial=initial, start_t=k - 1)
+    edited, _ = sample_ddpm(initial=initial, start_t=k - 1, labels=y_test[:8], guidance=1.5)
     edit_results[k] = edited
 
 rows = [("Original", clean_edit), ("Damaged input", damaged_edit)] + [(f"Edit k={k}", result) for k, result in edit_results.items()]
 fig, axes = plt.subplots(len(rows), 8, figsize=(9, 6))
 for row, (label, images) in enumerate(rows):
     for col in range(8):
-        axes[row, col].imshow(images[col].cpu().reshape(8, 8), cmap="gray", vmin=-1, vmax=1)
+        axes[row, col].imshow(images[col].cpu().reshape(IMAGE_SIZE, IMAGE_SIZE), cmap="gray", vmin=-1, vmax=1)
         axes[row, col].set_xticks([])
         axes[row, col].set_yticks([])
         if col == 0:
@@ -616,14 +802,15 @@ damaged_mse = F.mse_loss(damaged_edit, clean_edit).item()
 edit_mse = {k: F.mse_loss(result, clean_edit).item() for k, result in edit_results.items()}
 print("Pixel MSE to original in [-1, 1], damaged:", round(damaged_mse, 4))
 print("Pixel MSE after editing:", {k: round(v, 4) for k, v in edit_mse.items()})
-""")
-md(r"""
+''')
+
+md(r'''
 - **Масштаб MSE:** переход `[-1,1] → [0,1]` по формуле `(x+1)/2` уменьшает pixel MSE в 4 раза.
 - MSE предсказания шума измеряет другую величину.
 - Правдоподобное изменение класса может повышать MSE и нарушать требование сохранения содержания.
-""")
+''')
 
-md(r"""
+md(r'''
 ## 8. Дополнительно: заполнение пропусков
 
 - **Маска:** $m=1$ на известных пикселях; $m=0$ в пропуске.
@@ -636,17 +823,18 @@ $$x_{k-1}\leftarrow m\odot x_{k-1}^{known}+(1-m)\odot x_{k-1}^{generated}.$$
 - **Ограничение:** эвристика; не точный conditional posterior и не полная схема RePaint.
 
 Теория: [Score matching](https://fpakhurov.com/ru/notes/generative-models/score-matching/), [RePaint](https://arxiv.org/abs/2201.09865).
-""")
-code("""
+''')
+
+code(r'''
 @torch.no_grad()
-def inpaint(known_image, known_mask):
+def inpaint(known_image, known_mask, labels=None):
     current = torch.randn_like(known_image)
     known_noise = torch.randn_like(known_image)
     top_t = torch.full((len(current),), T - 1, dtype=torch.long, device=device)
     current = known_mask * q_sample(known_image, top_t, known_noise) + (1 - known_mask) * current
     for step_t in range(T - 1, -1, -1):
         t = torch.full((len(current),), step_t, dtype=torch.long, device=device)
-        current = reverse_step(current, t)
+        current = reverse_step(current, t, labels=labels, guidance=1.5)
         if step_t > 0:
             previous_t = torch.full((len(current),), step_t - 1, dtype=torch.long, device=device)
             known_at_level = q_sample(known_image, previous_t, known_noise)
@@ -656,11 +844,11 @@ def inpaint(known_image, known_mask):
     return current
 
 inpaint_original = x_test[8:16].clone()
-known_mask = torch.ones_like(inpaint_original).reshape(-1, 8, 8)
-known_mask[:, 2:6, 3:5] = 0.0
-known_mask = known_mask.reshape(-1, 64)
+known_mask = torch.ones_like(inpaint_original).reshape(-1, IMAGE_SIZE, IMAGE_SIZE)
+known_mask[:, 8:20, 11:17] = 0.0
+known_mask = known_mask.reshape(-1, INPUT_DIM)
 inpaint_input = known_mask * inpaint_original
-inpaint_result = inpaint(inpaint_original, known_mask)
+inpaint_result = inpaint(inpaint_original, known_mask, labels=y_test[8:16])
 known_pixel_error = ((inpaint_result - inpaint_original) * known_mask).abs().max().item()
 assert known_pixel_error < 1e-6, known_pixel_error
 missing_mask = 1 - known_mask
@@ -670,7 +858,7 @@ gray_fill_missing_mse = (((inpaint_input - inpaint_original).square() * missing_
 fig, axes = plt.subplots(3, 8, figsize=(9, 3.7))
 for row, (label, images) in enumerate([("Original", inpaint_original), ("Gray fill", inpaint_input), ("Inpainted", inpaint_result)]):
     for col in range(8):
-        axes[row, col].imshow(images[col].cpu().reshape(8, 8), cmap="gray", vmin=-1, vmax=1)
+        axes[row, col].imshow(images[col].cpu().reshape(IMAGE_SIZE, IMAGE_SIZE), cmap="gray", vmin=-1, vmax=1)
         axes[row, col].set_xticks([])
         axes[row, col].set_yticks([])
         if col == 0:
@@ -679,13 +867,14 @@ plt.tight_layout()
 plt.show()
 print(f"Known-pixel max error: {known_pixel_error:.2e}")
 print(f"Missing-pixel MSE, gray fill: {gray_fill_missing_mse:.4f}; inpainting: {inpaint_missing_mse:.4f}")
-""")
-md(r"""
+''')
+
+md(r'''
 - **Дополнительный эксперимент:** увеличить пропуск; сравнить два результата с разными seeds.
 - **Неоднозначность:** разные цифры могут совпадать на известных пикселях; правдоподобие не подтверждает восстановление оригинала.
-""")
+''')
 
-md(r"""
+md(r'''
 ## 9. Сравнение моделей
 
 | Модель | Обучение | Генерация | Проверка |
@@ -707,14 +896,27 @@ md(r"""
 - $x_T$ известен, но исходная чистая цифра не задана. Сеть задаёт обратные переходы, согласованные с данными.
 - Наблюдаемый фрагмент допускает несколько продолжений; одно изображение не устанавливает истинный оригинал.
 </details>
-""")
 
-code("""
+
+| Семейство | Ограничение базовой модели | Новое решение | Условный вариант |
+|---|---|---|---|
+| AE | Не задано распределение кодов | Реконструкция через bottleneck | Кодирование входа |
+| VAE (2013) | Неудобный точный posterior | ELBO и обучаемый $q(z\mid x)$ | $p(x\mid z,y)$, $q(z\mid x,y)$ |
+| GAN (2014) | Простое пиксельное likelihood | Состязательная целевая функция | $G(z,y)$ и $D(x,y)$ |
+| NICE/RealNVP (2014–2016) | Приближённая плотность/inference | Обратимость и точный logdet | $p(x\mid y)$ |
+| DDPM (2020) | Сложность прямого построения изображения | Последовательное удаление шума | Метка класса и CFG |
+
+Семейства развивались параллельно; сравниваются ограничения и вычислительные компромиссы. Loss разных семейств численно не сопоставляется.
+''')
+
+code(r'''
 SEMINAR_RESULTS = {
     "quick_mode": QUICK,
     "device": str(device),
     "flow_steps": FLOW_STEPS,
     "ddpm_steps": DDPM_STEPS,
+    "conditional_class_agreement": class_agreement,
+    "conditional_flow_marginal_nll": conditional_flow_marginal_nll,
     "gaussian_test_nll": gaussian_nll,
     "flow_test_nll": flow_nll,
     "flow_roundtrip_max_error": roundtrip_error,
@@ -731,9 +933,9 @@ SEMINAR_RESULTS = {
     "ddpm_seconds": ddpm_seconds,
 }
 print(SEMINAR_RESULTS)
-""")
+''')
 
-md(r"""
+md(r'''
 ## Первоисточники и материалы курса
 
 - [HSE-LAMBDA: Deep Generative Models](https://github.com/HSE-LAMBDA/DeepGenerativeModels/tree/spring-2025-long).
@@ -741,19 +943,13 @@ md(r"""
 - [DDPM](https://arxiv.org/abs/2006.11239): прямой процесс, posterior, обучение.
 - [SDEdit](https://arxiv.org/abs/2108.01073): редактирование через шум.
 - [RePaint](https://arxiv.org/abs/2201.09865): диффузионный inpainting.
-- [load_digits](https://scikit-learn.org/stable/modules/generated/sklearn.datasets.load_digits.html): источник данных.
+- [MNIST](https://pytorch.org/vision/stable/generated/torchvision.datasets.MNIST.html): источник рукописных цифр.
 
 Реализации самостоятельные; тематические ссылки на подробную теорию приведены в соответствующих разделах.
-""")
+''')
 
-notebook = nbf.v4.new_notebook(cells=cells)
-notebook.metadata = {
-    "kernelspec": {"display_name": "Python 3", "language": "python", "name": "python3"},
-    "language_info": {"name": "python", "version": "3.11"},
-    "colab": {"name": "02_flows_diffusion.ipynb", "provenance": []},
-    "seminar": {"duration_minutes": 90, "format": "guided_prepared_code_lab", "prerequisites": "Python and neural network basics"},
-}
+notebook=nbf.v4.new_notebook(cells=cells)
+notebook.metadata={'kernelspec': {'display_name': 'Python 3', 'language': 'python', 'name': 'python3'}, 'language_info': {'name': 'python', 'version': '3.12'}, 'colab': {'name': '02_flows_diffusion.ipynb', 'provenance': []}, 'seminar': {'duration_minutes': 90, 'seed': 42, 'image_size': 28}}
 nbf.validate(notebook)
-output = ROOT / "02_flows_diffusion.ipynb"
-nbf.write(notebook, output)
-print(output)
+nbf.write(notebook, ROOT / '02_flows_diffusion.ipynb')
+print('02_flows_diffusion.ipynb')

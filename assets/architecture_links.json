@@ -16,7 +16,7 @@
     "url": "https://arxiv.org/html/1511.06434v2/lsun_bedrooms_generator.png",
     "source": "https://arxiv.org/html/1511.06434v2",
     "alt": "DCGAN generator: transposed convolutions from latent vector to image",
-    "caption": "Генератор DCGAN. [Radford, Metz, Chintala (2016), рис. 1](https://arxiv.org/html/1511.06434v2). В практикуме используется полносвязный генератор.",
+    "caption": "Генератор DCGAN. [Radford, Metz, Chintala (2016), рис. 1](https://arxiv.org/html/1511.06434v2). В практикуме используется компактный свёрточный генератор 7→14→28.",
     "checked_date": "2026-11-04",
     "http_status": 200,
     "content_type": "image/png"
@@ -60,7 +60,7 @@
     "url": "https://lmb.informatik.uni-freiburg.de/people/ronneber/u-net/u-net-architecture.png",
     "source": "https://lmb.informatik.uni-freiburg.de/people/ronneber/u-net/",
     "alt": "Original U-Net: contracting and expanding paths with skip connections",
-    "caption": "Исходная U-Net для сегментации: [Ronneberger et al. (2015)](https://lmb.informatik.uni-freiburg.de/people/ronneber/u-net/). В DDPM используют модификации с кодированием времени; в практикуме — MLP.",
+    "caption": "Исходная U-Net для сегментации: [Ronneberger et al. (2015)](https://lmb.informatik.uni-freiburg.de/people/ronneber/u-net/). В DDPM используют модификации с кодированием времени; в практикуме — компактная условная U-Net.",
     "checked_date": "2026-11-04",
     "http_status": 200,
     "content_type": "image/png"

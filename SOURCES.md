@@ -51,7 +51,7 @@
 | pix2pix | Isola et al. [Image-to-Image Translation with Conditional Adversarial Networks](https://arxiv.org/abs/1611.07004) |
 | CycleGAN | Zhu et al. [Unpaired Image-to-Image Translation](https://junyanz.github.io/CycleGAN/) |
 | SDEdit | Meng et al. [Guided Image Synthesis and Editing with SDEs](https://arxiv.org/abs/2108.01073) |
-| Данные | [scikit-learn: load_digits](https://scikit-learn.org/stable/modules/generated/sklearn.datasets.load_digits.html): 1 797 объектов, 10 классов, 8×8 |
+| Данные | [MNIST](https://docs.pytorch.org/vision/stable/generated/torchvision.datasets.MNIST.html): 70 000 объектов, 10 классов, 28×28 |
 
 ## Фотографический пример
 
@@ -73,4 +73,15 @@
 
 - Проверены HTTP 200 и тип `image/png` для всех шести URL.
 - Изображения загружаются из внешних источников; для отображения требуется интернет.
-- Авторство указано в подписях. DCGAN и U-Net иллюстрируют архитектуры для изображений; практикум использует MLP.
+- Авторство указано в подписях. В практикуме используются компактный свёрточный генератор 7→14→28 и условная U-Net с кодированием времени; размеры и состав блоков отличаются от исходных схем.
+
+## Условная диффузия
+
+- [Ho, Salimans — Classifier-Free Diffusion Guidance](https://arxiv.org/abs/2207.12598): совместное обучение условной и безусловной ветвей, компромисс качества и разнообразия.
+
+## Кошка и собака: предобученный автоэнкодер
+
+- [TAESD](https://github.com/madebyollin/taesd), commit `fdbae2df989db95761f482efb8977e1182fb68d2`, MIT. Детерминированная дистиллированная модель; гауссовский posterior в этом опыте не вычисляется.
+- Фотографии и их производные: [атрибуция и лицензия](assets/PETS_LICENSE.md).
+- Результаты и SHA-256 архитектуры, весов и входов: `assets/pets_execution.json`.
+- Условная генерация по метке демонстрируется отдельно на cVAE, cGAN, условном RealNVP и DDPM с classifier-free guidance.

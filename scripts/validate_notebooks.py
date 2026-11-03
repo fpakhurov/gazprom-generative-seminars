@@ -17,6 +17,8 @@ from PIL import Image, ImageDraw
 
 
 def validate(path, destination):
+    for old_plot in destination.glob(f"{path.stem}_cell_*_output_*.png"):
+        old_plot.unlink()
     notebook = nbformat.read(path, as_version=4)
     nbformat.validate(notebook)
     started = time.perf_counter()
@@ -26,6 +28,7 @@ def validate(path, destination):
         kernel_name="python3",
         resources={"metadata": {"path": str(path.parent)}},
         allow_errors=False,
+        on_cell_executed=lambda cell, cell_index, **kwargs: print(f"Executed cell {cell_index}", flush=True),
     )
     client.execute()
     seconds = time.perf_counter() - started
@@ -58,7 +61,8 @@ def validate(path, destination):
     sheet.save(destination / f"{path.stem}_contact_sheet.png")
     report = {
         "notebook": path.name,
-        "execution": "full default local CPU run",
+        "execution": "full local notebook execution",
+        "environment_overrides": {key: os.environ[key] for key in ["SEMINAR_DEVICE", "SEMINAR_DIFFUSION_DEVICE", "SEMINAR_QUICK"] if key in os.environ},
         "elapsed_seconds": round(seconds, 2),
         "python": sys.version.split()[0],
         "platform": platform.platform(),

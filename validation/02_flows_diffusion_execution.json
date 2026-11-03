@@ -1,7 +1,10 @@
 {
   "notebook": "02_flows_diffusion.ipynb",
-  "execution": "full default local CPU run",
-  "elapsed_seconds": 37.41,
+  "execution": "full local notebook execution",
+  "environment_overrides": {
+    "SEMINAR_DIFFUSION_DEVICE": "mps"
+  },
+  "elapsed_seconds": 438.95,
   "python": "3.12.7",
   "platform": "macOS-26.5.2-arm64-arm-64bit",
   "packages": {
@@ -12,9 +15,9 @@
     "nbformat": "5.11.1",
     "nbclient": "0.11.0"
   },
-  "code_cells": 13,
-  "executed_code_cells": 13,
-  "plot_count": 10,
+  "code_cells": 16,
+  "executed_code_cells": 16,
+  "plot_count": 14,
   "error_count": 0,
   "text_outputs": [
     {
@@ -31,55 +34,93 @@
     },
     {
       "cell": 9,
-      "text": "Flow training and evaluation: 5.5 seconds\nHeld-out NLL, Gaussian: 2.7190; flow: 1.5948 nats per 2D point\nFlow NLL improvement: 1.1242\n"
+      "text": "Flow training and evaluation: 5.8 seconds\nHeld-out NLL, Gaussian: 2.7190; flow: 1.5948 nats per 2D point\nFlow NLL improvement: 1.1242\n"
     },
     {
       "cell": 11,
       "text": "Roundtrip max error: 7.15e-07\nForward/inverse logdet cancellation: 4.77e-07\nAutograd/analytic logdet error: 1.67e-06\n"
     },
     {
-      "cell": 14,
-      "text": "Train: (1437, 64) Test: (360, 64)\n"
+      "cell": 13,
+      "text": "Conditional-flow mixture held-out marginal NLL: 1.5373\n"
     },
     {
-      "cell": 14,
+      "cell": 16,
+      "text": "Diffusion training device: mps\n"
+    },
+    {
+      "cell": 16,
+      "text": "Train: (12000, 784) Test: (2000, 784)\n"
+    },
+    {
+      "cell": 16,
       "text": "Terminal alpha_bar: 2.43e-07\n"
     },
     {
-      "cell": 17,
-      "text": "DDPM training: 24.3 seconds\nHeld-out noise MSE: 0.2070; zero predictor baseline: 0.9933\n"
+      "cell": 19,
+      "text": "DDPM step 1000/6000; noise MSE: 0.0823\n"
     },
     {
       "cell": 19,
-      "text": "Held-out noise MSE by k: {1: 0.953, 10: 0.4956, 30: 0.2162, 60: 0.0936, 90: 0.0182, 100: 0.0129}\n"
+      "text": "DDPM step 2000/6000; noise MSE: 0.0553\n"
+    },
+    {
+      "cell": 19,
+      "text": "DDPM step 3000/6000; noise MSE: 0.0547\n"
+    },
+    {
+      "cell": 19,
+      "text": "DDPM step 4000/6000; noise MSE: 0.0483\n"
+    },
+    {
+      "cell": 19,
+      "text": "DDPM step 5000/6000; noise MSE: 0.0454\n"
+    },
+    {
+      "cell": 19,
+      "text": "DDPM step 6000/6000; noise MSE: 0.0498\n"
+    },
+    {
+      "cell": 19,
+      "text": "DDPM training: 406.1 seconds\nHeld-out noise MSE: 0.0422; zero predictor baseline: 0.9989\n"
     },
     {
       "cell": 21,
-      "text": "Known-noise x0 reconstruction error: 1.15e-04\n"
+      "text": "Held-out noise MSE by k: {1: 0.1887, 10: 0.0935, 30: 0.0481, 60: 0.0271, 90: 0.0052, 100: 0.0005}\n"
     },
     {
-      "cell": 25,
-      "text": "Pixel MSE to original in [-1, 1], damaged: 0.2009\nPixel MSE after editing: {10: 0.17, 35: 0.2114, 70: 0.3861}\n"
+      "cell": 23,
+      "text": "Known-noise x0 reconstruction error: 2.05e-04\n"
     },
     {
-      "cell": 28,
-      "text": "Known-pixel max error: 0.00e+00\nMissing-pixel MSE, gray fill: 0.6499; inpainting: 0.6813\n"
+      "cell": 26,
+      "text": "MNIST held-out probe accuracy: 0.907\n"
     },
     {
-      "cell": 31,
-      "text": "{'quick_mode': False, 'device': 'cpu', 'flow_steps': 1600, 'ddpm_steps': 16000, 'gaussian_test_nll': 2.718989372253418, 'flow_test_nll': 1.5947524309158325, 'flow_roundtrip_max_error': 7.152557373046875e-07, 'flow_jacobian_logdet_error': 1.6689300537109375e-06, 'ddpm_test_noise_mse': 0.20697709918022156, 'ddpm_zero_predictor_mse': 0.9933120608329773, 'oracle_x0_max_error': 0.00011539459228515625, 'damaged_edit_mse': 0.20086669921875, 'edit_mse_by_start_k': {10: 0.17002394795417786, 35: 0.21135960519313812, 70: 0.3861265778541565}, 'inpaint_known_pixel_max_error': 0.0, 'inpaint_missing_mse': 0.6812981963157654, 'gray_fill_missing_mse': 0.64990234375, 'flow_seconds': 5.469806459033862, 'ddpm_seconds': 24.339936541975476}\n"
+      "cell": 26,
+      "text": "Conditional DDPM probe class agreement: 0.875\nClass agreement does not measure diversity or guarantee sample quality.\n"
+    },
+    {
+      "cell": 29,
+      "text": "Pixel MSE to original in [-1, 1], damaged: 0.1488\nPixel MSE after editing: {10: 0.1438, 35: 0.1581, 70: 0.2456}\n"
+    },
+    {
+      "cell": 32,
+      "text": "Known-pixel max error: 0.00e+00\nMissing-pixel MSE, gray fill: 0.8028; inpainting: 0.5408\n"
+    },
+    {
+      "cell": 35,
+      "text": "{'quick_mode': False, 'device': 'mps', 'flow_steps': 1600, 'ddpm_steps': 6000, 'conditional_class_agreement': 0.875, 'conditional_flow_marginal_nll': 1.5373486280441284, 'gaussian_test_nll': 2.718989372253418, 'flow_test_nll': 1.5947524309158325, 'flow_roundtrip_max_error': 7.152557373046875e-07, 'flow_jacobian_logdet_error': 1.6689300537109375e-06, 'ddpm_test_noise_mse': 0.04216247797012329, 'ddpm_zero_predictor_mse': 0.9989173412322998, 'oracle_x0_max_error': 0.000205308198928833, 'damaged_edit_mse': 0.1487535536289215, 'edit_mse_by_start_k': {10: 0.1437762826681137, 35: 0.15812687575817108, 70: 0.24558766186237335}, 'inpaint_known_pixel_max_error': 0.0, 'inpaint_missing_mse': 0.5407770872116089, 'gray_fill_missing_mse': 0.802769660949707, 'flow_seconds': 5.79509083298035, 'ddpm_seconds': 406.0739890409168}\n"
+    },
+    {
+      "cell": 37,
+      "text": "Pet demo: [2, 3, 256, 256] -> [2, 4, 32, 32] ; reconstruction MSE: [0.0025059052277356386, 0.005918176379054785]\n"
     }
   ],
-  "notebook_sha256": "6819094009184e8b2ba1397df68425e6e99fb5f197404d384c8889a29dfb0665",
+  "notebook_sha256": "a59b2bba305f3d454d9e76f734225e7b81f622fe127582928d29f7fa469ecf08",
   "colab_hosted_runtime_tested": false,
   "editorial_revision": {
     "date": "2026-11-04",
-    "code_cells_identical": true,
-    "new_training_run": false,
-    "outputs_preserved_from_sha256": "9203167af4e3d048fa3ff9d5f65dc54e49332ff6676daddf3971a43f1dada643",
-    "code_sources_sha256": "f297496788ffc04bc97eecd450abf4a94bcb4ddca8e97548bb7544fcc2a305eb",
-    "markdown_words_before": 2318,
-    "markdown_words_after": 1260,
-    "remote_figure_count": 3
+    "code_and_outputs_unchanged": true
   }
 }

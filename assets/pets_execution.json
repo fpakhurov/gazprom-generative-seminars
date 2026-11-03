@@ -1,0 +1,50 @@
+{
+  "method": "TAESD deterministic distilled image autoencoder",
+  "model_commit": "fdbae2df989db95761f482efb8977e1182fb68d2",
+  "input_shape": [
+    2,
+    3,
+    256,
+    256
+  ],
+  "latent_shape": [
+    2,
+    4,
+    32,
+    32
+  ],
+  "noise_levels": [
+    0.0,
+    0.2,
+    0.6
+  ],
+  "reconstruction_mse": [
+    0.0025059052277356386,
+    0.005918176379054785
+  ],
+  "seconds_cpu": 2.226,
+  "training_performed": false,
+  "gaussian_posterior": false,
+  "files": {
+    "taesd.py": {
+      "url": "https://raw.githubusercontent.com/madebyollin/taesd/fdbae2df989db95761f482efb8977e1182fb68d2/taesd.py",
+      "sha256": "5943493eb291f768e0a87dd9b54c60461d3be0a9141003db7f62bd6b8e9efa6f"
+    },
+    "taesd_encoder.pth": {
+      "url": "https://raw.githubusercontent.com/madebyollin/taesd/fdbae2df989db95761f482efb8977e1182fb68d2/taesd_encoder.pth",
+      "sha256": "15bc6128f0ac51c673d3427216082ebfa62402ffc89763af74edfe259b32d49d"
+    },
+    "taesd_decoder.pth": {
+      "url": "https://raw.githubusercontent.com/madebyollin/taesd/fdbae2df989db95761f482efb8977e1182fb68d2/taesd_decoder.pth",
+      "sha256": "02873377c3f4659cd9f9adb2f718dcb434ba4c7bba3af3ee7bb95cbdabe2d3cf"
+    },
+    "cat.jpg": {
+      "url": "https://upload.wikimedia.org/wikipedia/commons/b/b6/Felis_catus-cat_on_snow.jpg",
+      "sha256": "74d09a7c6463a844572c58634a798d4fa1b646aeff8be81a42ab68915e54e049"
+    },
+    "dog.jpg": {
+      "url": "https://upload.wikimedia.org/wikipedia/commons/6/6e/Golde33443.jpg",
+      "sha256": "1e71abf29876f248088a11211a350ed3d26a0c68aa34f6e45738771eb2d45a22"
+    }
+  }
+}

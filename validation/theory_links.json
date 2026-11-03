@@ -1,7 +1,7 @@
 {
-  "date": "2026-11-03",
-  "pages_checked": 15,
-  "links_checked": 28,
+  "date": "2026-11-04",
+  "pages_checked": 16,
+  "links_checked": 31,
   "results": [
     {
       "url": "https://fpakhurov.com/ru/notes/generative-models/autoencoders/",
@@ -108,6 +108,13 @@
       "anchors_checked": [],
       "missing_anchors": [],
       "title": "Score matching и динамика Ланжевена — Генеративные модели — Фёдор Пахуров"
+    },
+    {
+      "url": "https://fpakhurov.com/ru/notes/generative-models/stargan/",
+      "http_status": 200,
+      "anchors_checked": [],
+      "missing_anchors": [],
+      "title": "StarGAN: один генератор для многих доменов — Генеративные модели — Фёдор Пахуров"
     },
     {
       "url": "https://fpakhurov.com/ru/notes/generative-models/vae-variants/",

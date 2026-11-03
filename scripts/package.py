@@ -22,6 +22,16 @@ for name in ["01_vae_gan", "02_flows_diffusion"]:
     nbformat.validate(notebook)
     settings = notebook.metadata.get("gazprom_seminar", notebook.metadata.get("seminar", {}))
     assert settings["duration_minutes"] == 90
+    assert settings["image_size"] == 28
+    builder = ast.parse((root / "scripts" / f"build_{name[:2]}.py").read_text())
+    expected = [(node.value.func.id, ast.literal_eval(node.value.args[0]).strip())
+                for node in builder.body
+                if isinstance(node, ast.Expr) and isinstance(node.value, ast.Call)
+                and isinstance(node.value.func, ast.Name) and node.value.func.id in {"md", "code"}]
+    actual = [("md" if cell.cell_type == "markdown" else "code", cell.source)
+              for cell in notebook.cells
+              if not {"photo_extension", "pet_extension"}.intersection(cell.metadata.get("tags", []))]
+    assert actual == expected, f"Builder/notebook content mismatch: {name}"
     code_cells = [cell for cell in notebook.cells if cell.cell_type == "code"]
     for cell in code_cells:
         ast.parse(cell.source)
@@ -47,7 +57,7 @@ for text in root.glob("*.md"):
             assert (text.parent / target.split("#")[0]).exists(), (text.name, target)
 
 excluded_parts = {".git", ".venv", "venv", ".cache", ".ipynb_checkpoints",
-                  "__pycache__", "cyclegan_cache", "node_modules"}
+                  "__pycache__", "cyclegan_cache", "node_modules", "data", "checkpoints"}
 files = [path for path in root.rglob("*") if path.is_file()
          and not excluded_parts.intersection(path.relative_to(root).parts)
          and path.name not in {".DS_Store", "MANIFEST.sha256", ".env"}
