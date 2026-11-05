@@ -1,6 +1,7 @@
 """Check saved execution evidence and create a verified portable ZIP package."""
 
 import ast
+import argparse
 import hashlib
 import json
 from pathlib import Path
@@ -11,6 +12,9 @@ from bs4 import BeautifulSoup
 import nbformat
 
 
+parser = argparse.ArgumentParser()
+parser.add_argument("--source-only", action="store_true", help="Package a clearly marked partial source revision without claiming a full execution")
+arguments = parser.parse_args()
 root = Path(__file__).resolve().parents[1]
 figures = json.loads((root / "assets" / "architecture_links.json").read_text())
 figure_urls = {figure["url"] for figure in figures}
@@ -35,11 +39,17 @@ for name in ["01_vae_gan", "02_flows_diffusion"]:
     code_cells = [cell for cell in notebook.cells if cell.cell_type == "code"]
     for cell in code_cells:
         ast.parse(cell.source)
-        assert cell.execution_count is not None
+        if not arguments.source_only:
+            assert cell.execution_count is not None
         assert all(output.output_type != "error" for output in cell.get("outputs", []))
     report = json.loads((root / "validation" / f"{name}_execution.json").read_text())
     assert report["notebook_sha256"] == hashlib.sha256(path.read_bytes()).hexdigest()
-    assert report["executed_code_cells"] == len(code_cells)
+    if arguments.source_only:
+        assert report.get("validation_scope") == "partial"
+        assert report.get("full_notebook_executed") is False
+    else:
+        assert report.get("full_notebook_executed", True)
+        assert report["executed_code_cells"] == len(code_cells)
     if report.get("colab_hosted_runtime_tested"):
         colab_report = json.loads((root / "validation" / report["colab_verification_report"]).read_text())
         assert colab_report["completed_code_cells"] == len(code_cells)
@@ -59,7 +69,7 @@ for name in ["01_vae_gan", "02_flows_diffusion"]:
     expected_figures = {figure["url"] for figure in figures if figure["notebook"] == name}
     actual_figures = {image.get("src") for image in soup.find_all("img") if not image.get("src", "").startswith("data:")}
     assert actual_figures == expected_figures
-    print(name, len(code_cells), "executed code cells;", len(soup.select(".katex")), "rendered formulas")
+    print(name, len(code_cells), "source code cells;" if arguments.source_only else "executed code cells;", len(soup.select(".katex")), "rendered formulas")
 
 for text in root.glob("*.md"):
     for target in re.findall(r"\]\(([^)]+)\)", text.read_text()):

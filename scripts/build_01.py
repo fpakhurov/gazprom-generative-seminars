@@ -38,10 +38,15 @@ md(r'''
 - Основные данные MNIST загружаются один раз (~12 MB); новый inference CycleGAN требует сети. Сохранённый результат встроен.
 - **Проведение:** 75 минут основного материала + 15 минут резерва. Один самостоятельный опыт. «Выполнить все» выполняется один раз и включает дополнительные зависимости (в частности, probe для cVAE). Дополнителен разбор, а не первый запуск этих ячеек.
 - Если подключение задержалось более чем на 5 минут, продолжить по сохранённым outputs. На занятии повторять только короткую «Практику 1»; обучение и перебор β не повторять.
-- `SEMINAR_QUICK=1` — сокращённая проверка исполнения; качество моделей в этом режиме не оценивается.
+- В первой кодовой ячейке доступен `QUICK_MODE`: выберите его **до** «Выполнить все». Это короткая проверка кода (GAN/cGAN по 50 шагов), а не режим хороших генераций. `SEMINAR_QUICK=1` также поддерживается.
+- Режим читается при выполнении первой ячейки. После изменения режима повторите первую ячейку, загрузку данных и создание/обучение моделей. Перед GAN печатаются mode/device/steps: `quick` должен показывать 50, `full` — 2500/3000.
+- [Заметки преподавателя по каждому разделу](https://github.com/fpakhurov/gazprom-generative-seminars/blob/main/LECTURER_NOTES_01.md).
+
+**Сохранённые результаты:** примеры без повторного запуска относятся к проверенной версии v1.2.0. Изменённые кодовые ячейки оставлены без старых outputs; новый полный прогон этой редакции пока не выполнялся.
 ''')
 
 code(r'''
+#@title Setup: device and quick smoke mode
 import os
 import random
 import time
@@ -57,7 +62,8 @@ from sklearn.model_selection import train_test_split
 from sklearn.linear_model import LogisticRegression
 
 SEED = 42
-QUICK = os.environ.get("SEMINAR_QUICK", "0") == "1"
+QUICK_MODE = False #@param {type:"boolean"}
+QUICK = QUICK_MODE or os.environ.get("SEMINAR_QUICK", "0") == "1"
 random.seed(SEED)
 np.random.seed(SEED)
 torch.manual_seed(SEED)
@@ -222,7 +228,7 @@ with torch.no_grad():
     ae_reconstruction = ae(x_test[:20].to(device)).cpu()
     ae_random = ae.decoder(torch.randn(20, LATENT_DIM, device=device)).cpu()
 image_grid(torch.cat([x_test[:10], ae_reconstruction[:10], ae_random[:10]]),
-           "AE: original / reconstruction / arbitrary normal codes")
+           "AE: original / reconstruction / decoding random Gaussian latent vectors")
 ''')
 
 md(r'''
@@ -235,7 +241,7 @@ md(r'''
 
 </details>
 
-## 3. Априорное и апостериорное распределения
+## 3. Демонстрация: от prior к posterior
 
 **Модель:** $x=z^2+\eta$, $z\sim\mathcal N(0,1)$, $\eta\sim\mathcal N(0,\sigma^2)$, $\sigma=0.15$.
 
@@ -245,7 +251,7 @@ md(r'''
 
 $$p(z\mid x)=\frac{p(x\mid z)p(z)}{p(x)},\qquad p(x)=\int p(x\mid z)p(z)\,dz.$$
 
-**Эксперимент:** при $x=1$ posterior имеет пики около $-1$ и $1$.
+**Демонстрация:** до наблюдения используем prior; после $x=1$ получаем posterior с пиками около $-1$ и $1$. Это before/after наблюдения, обучение здесь не выполняется. По вертикали — плотность; отдельной метрики качества нет.
 
 **Теория:** [Латентная модель и posterior](https://fpakhurov.com/ru/notes/generative-models/vae/#the-latent-variable-model-and-its-posterior).
 ''')
@@ -260,8 +266,8 @@ likelihood /= sigma_toy * np.sqrt(2 * np.pi)
 posterior = prior * likelihood
 posterior /= np.trapezoid(posterior, z_axis) if hasattr(np, "trapezoid") else np.trapz(posterior, z_axis)
 fig, axes = plt.subplots(1, 2, figsize=(10, 3))
-axes[0].plot(z_axis, prior, label="Prior p(z)")
-axes[0].plot(z_axis, posterior, label="Posterior p(z | x=1)")
+axes[0].plot(z_axis, prior, label="Before observation: prior p(z)")
+axes[0].plot(z_axis, posterior, label="After x=1: posterior p(z | x=1)")
 axes[0].set(xlabel="z", ylabel="Density")
 axes[0].legend()
 axes[1].plot(z_axis, z_axis ** 2, label="Decoder mean z^2")
@@ -398,7 +404,9 @@ md(r'''
 - **Генерация:** $z\sim p(z)\to g_\theta(z)$; encoder не требуется.
 - **Интерполяция:** линейный путь между кодами; принадлежность типичной области prior не гарантирована.
 
-**Практика:** сравнить реконструкции и генерации; повторить генерацию с новым шумом.
+**Как читать вывод:** первая фигура — оригинал / AE-реконструкция / VAE-реконструкция; вторая — новые VAE-изображения из prior; третья — декодирование промежуточных кодов между цифрами 1 и 7.
+
+**Метрика:** per-pixel MSE на test относится только к реконструкции. Для генерации и интерполяции здесь выполняется визуальная диагностика. В этой ячейке модели не обучаются.
 
 **Теория:** [VAE](https://fpakhurov.com/ru/notes/generative-models/vae/).
 ''')
@@ -461,10 +469,11 @@ md(r'''
 
 </details>
 
-## 6. Дополнительно: восстановление повреждений
+## 6. Дополнительно: ограничения VAE при восстановлении пропусков
 
 - Закрыть фрагмент test-изображения; применить VAE без дообучения.
-- Сравнить MSE пропуска с заполнением нулями.
+- Строки: оригинал → закрытый фрагмент → реконструкция VAE. Это проверка переноса обычного VAE на повреждённый вход.
+- Сравнить MSE только на пропуске с заполнением нулями. Улучшение среднего MSE не гарантирует хорошего восстановления каждой цифры; известные пиксели тоже могут измениться.
 - Ограничение: модель обучалась на чистых входах без маски; $p(x_{\rm missing}\mid x_{\rm observed})$ не вычисляется.
 - Специализированные варианты: denoising AE, условные модели, диффузионное восстановление.
 ''')
@@ -512,11 +521,70 @@ $$\min_\theta\ \mathcal L_G=-\mathbb E_{z\sim p(z)}\log s(G(z)).$$
 
 - Компактная DCGAN-архитектура: свёртки, BatchNorm и обучаемое увеличение пространственного разрешения.
 - Метки реальных примеров сглажены до 0.9; шаг дискриминатора использует меньшую скорость обучения.
+- Во время обучения показываются фиксированные коды, шаг/время, losses и D score = sigmoid(logit) над каждым сэмплом. Рядом выводится средняя оценка фиксированных реальных изображений.
+- Оценка относится к текущему дискриминатору; значения разных шагов не являются общей шкалой качества. При preview обе сети временно работают в eval, затем режим обучения восстанавливается.
 ''')
 
 code(r'''
+"""Display fixed-noise GAN samples without modifying training state."""
+
+import math
+import matplotlib.pyplot as plt
+import torch
+from IPython.display import clear_output, display
+
+
+def gan_training_preview(generator, discriminator, latent, real_reference, step, total,
+                         loss_d, loss_g, elapsed, handle=None, labels=None,
+                         reference_labels=None, title="GAN"):
+    generator_mode, discriminator_mode = generator.training, discriminator.training
+    try:
+        generator.eval()
+        discriminator.eval()
+        with torch.no_grad():
+            images = generator(latent) if labels is None else generator(latent, labels)
+            fake_logits = discriminator(images) if labels is None else discriminator(images, labels)
+            real_logits = (discriminator(real_reference) if reference_labels is None
+                           else discriminator(real_reference, reference_labels))
+            scores = fake_logits.sigmoid().flatten().cpu()
+            real_score = real_logits.sigmoid().mean().item()
+            images = images.detach().cpu()
+    finally:
+        generator.train(generator_mode)
+        discriminator.train(discriminator_mode)
+
+    columns = 6
+    rows = math.ceil(len(images) / columns)
+    figure, axes = plt.subplots(rows, columns, figsize=(9, 1.7 * rows), squeeze=False)
+    for index, axis in enumerate(axes.flat):
+        axis.axis("off")
+        if index < len(images):
+            axis.imshow(images[index].reshape(28, 28), cmap="gray", vmin=0, vmax=1,
+                        interpolation="nearest")
+            prefix = "" if labels is None else f"y={int(labels[index])}; "
+            axis.set_title(f"{prefix}D={scores[index]:.2f}", fontsize=9)
+    remaining = max(total - step, 0) * elapsed / max(step, 1)
+    figure.suptitle(
+        f"{title}: step {step}/{total} ({100 * step / total:.0f}%) | "
+        f"{elapsed:.1f} s elapsed | about {remaining:.1f} s remaining\n"
+        f"loss D={loss_d:.3f}; G={loss_g:.3f} | "
+        f"mean D(real)={real_score:.2f}; D(fake)={scores.mean().item():.2f}", fontsize=10)
+    figure.text(0.5, 0.01, "D score = sigmoid(current discriminator logit); not an image-quality metric.",
+                ha="center", fontsize=8)
+    figure.tight_layout(rect=(0, 0.05, 1, 0.87))
+    try:
+        clear_output(wait=True)
+        display(figure)
+        handle = None
+    finally:
+        plt.close(figure)
+    summary = {"step": step, "total": total, "real_score": real_score,
+               "fake_scores": scores.tolist(), "elapsed_seconds": elapsed}
+    return handle, images, summary
+
 GAN_Z_DIM = 64
 GAN_STEPS = 50 if QUICK else 2500
+GAN_PREVIEW_EVERY = 25 if QUICK else 250
 
 
 class Generator(nn.Module):
@@ -551,6 +619,10 @@ fixed_noise = torch.randn(30, GAN_Z_DIM, device=device)
 train_on_device = x_train.to(device)
 gan_history = []
 gan_snapshots = {}
+preview_handle = None
+last_preview_time = 0.0
+preview_records = []
+print(f"GAN mode: {'quick' if QUICK else 'full'}; device: {device}; steps: {GAN_STEPS}", flush=True)
 started = time.perf_counter()
 for step in range(GAN_STEPS):
     indices = torch.randint(len(train_on_device), (128,), device=device)
@@ -575,9 +647,17 @@ for step in range(GAN_STEPS):
     g_loss.backward()
     g_optimizer.step()
     gan_history.append((d_loss.item(), g_loss.item()))
-    if step in {0, GAN_STEPS // 2, GAN_STEPS - 1}:
-        with torch.no_grad():
-            gan_snapshots[step + 1] = generator(fixed_noise).cpu()
+    now = time.perf_counter()
+    checkpoint = step + 1 in {1, max(1, GAN_STEPS // 2), GAN_STEPS}
+    if checkpoint or (step + 1) % GAN_PREVIEW_EVERY == 0 or now - last_preview_time >= 15:
+        preview_handle, preview_images, preview_record = gan_training_preview(
+            generator, discriminator, fixed_noise[:12], train_on_device[:12],
+            step + 1, GAN_STEPS, d_loss.item(), g_loss.item(), now - started,
+            handle=preview_handle, title=f"GAN {'quick' if QUICK else 'full'} ({device})")
+        preview_records.append(preview_record)
+        if checkpoint:
+            gan_snapshots[step + 1] = preview_images
+        last_preview_time = time.perf_counter()
 for parameter in discriminator.parameters():
     parameter.requires_grad_(True)
 generator.eval()
@@ -652,7 +732,7 @@ md(r'''
 
 $$p_\theta(x\mid y)=\int p_\theta(x\mid z,y)p(z)\,dz,\qquad q_\phi(z\mid x,y).$$
 
-- Обучение: $y$ передаётся encoder и decoder через one-hot.
+- Обучение: one-hot класса добавляется **к изображению на входе encoder** и **к коду на входе decoder**. При генерации используется только decoder с выбранными $y$ и случайным $z$.
 - Генерация: $y$, $z\sim\mathcal N(0,I)$, decoder.
 - Prior независим от класса.
 - В опыте cVAE используется β=4: усиленный KL-штраф уменьшает выгодность кодирования класса только в $z$. Это модифицированная β-VAE-цель; отрицательная ELBO соответствует β=1.
@@ -722,6 +802,16 @@ cg_opt = torch.optim.Adam(cgan.parameters(), lr=2e-4, betas=(0.5, 0.999))
 cd_opt = torch.optim.Adam(cdisc.parameters(), lr=1e-4, betas=(0.5, 0.999))
 cgan_steps = 50 if QUICK else 3000
 train_labels_device = y_train.to(device)
+preview_rng = torch.Generator(device="cpu").manual_seed(SEED + 200)
+cg_preview_noise = torch.randn(12, GAN_Z_DIM, generator=preview_rng).to(device)
+cg_preview_labels = torch.arange(12, device=device) % 10
+cg_reference = torch.stack([train_on_device[(train_labels_device == label).nonzero()[0, 0]]
+                            for label in cg_preview_labels])
+cg_preview_handle = None
+cg_preview_records = []
+cg_last_preview = 0.0
+cg_preview_every = 25 if QUICK else 250
+print(f"cGAN mode: {'quick' if QUICK else 'full'}; device: {device}; steps: {cgan_steps}", flush=True)
 start = time.perf_counter()
 for step in range(cgan_steps):
     idx = torch.randint(len(train_on_device), (128,), device=device)
@@ -737,6 +827,14 @@ for step in range(cgan_steps):
     logits = cdisc(fake, labels)
     cg_loss = bce_logits(logits, torch.ones_like(logits))
     cg_loss.backward(); cg_opt.step()
+    now = time.perf_counter()
+    if step == 0 or step + 1 == cgan_steps or (step + 1) % cg_preview_every == 0 or now - cg_last_preview >= 15:
+        cg_preview_handle, _, record = gan_training_preview(
+            cgan, cdisc, cg_preview_noise, cg_reference, step + 1, cgan_steps,
+            cd_loss.item(), cg_loss.item(), now - start, handle=cg_preview_handle,
+            labels=cg_preview_labels, reference_labels=cg_preview_labels, title=f"cGAN {'quick' if QUICK else 'full'} ({device})")
+        cg_preview_records.append(record)
+        cg_last_preview = time.perf_counter()
 cgan.eval()
 cdisc.eval()
 with torch.no_grad():
@@ -757,6 +855,13 @@ md(r'''
 - **Действие:** выбрать 3, затем 8; сохранить seed. После этого изменить только seed.
 - **Результат:** сопоставить управление классом, различия начертания и ошибки моделей. Одинаковый seed не означает одинаковое латентное пространство двух моделей.
 - Обучающие ячейки и перебор β повторно на занятии не запускаются.
+
+| Параметр | Что меняется при повторном запуске этой ячейки | Что сохраняем для сравнения |
+|---|---|---|
+| TARGET_CLASS | Запрошенная цифра; класс передаётся обоим обученным декодерам | LATENT_SEED; внутри каждой модели используются те же коды |
+| LATENT_SEED | Воспроизводимый набор из восьми латентных векторов для каждой модели | TARGET_CLASS |
+
+Две строки — cVAE и cGAN. Столбцы — разные коды, не этапы обучения. Архитектуры имеют разные размерности z; одинаковый seed не делает коды двух моделей одинаковыми. Меняются входы генерации, веса моделей остаются прежними.
 ''')
 
 code(r'''

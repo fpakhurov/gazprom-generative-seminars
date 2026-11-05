@@ -1,0 +1,150 @@
+{
+  "notebook": "02_flows_diffusion.ipynb",
+  "execution": "full local notebook execution",
+  "environment_overrides": {
+    "SEMINAR_DIFFUSION_DEVICE": "mps"
+  },
+  "elapsed_seconds": 406.05,
+  "cell_seconds": {
+    "2": 2.808,
+    "4": 0.417,
+    "7": 0.008,
+    "9": 6.069,
+    "11": 0.191,
+    "13": 3.058,
+    "16": 1.407,
+    "19": 375.65,
+    "21": 2.602,
+    "23": 1.222,
+    "24": 0.342,
+    "26": 5.429,
+    "28": 0.472,
+    "31": 0.737,
+    "34": 0.547,
+    "37": 0.004,
+    "39": 3.398
+  },
+  "python": "3.12.7",
+  "platform": "macOS-26.5.2-arm64-arm-64bit",
+  "packages": {
+    "torch": "2.14.1",
+    "numpy": "2.5.4",
+    "matplotlib": "3.11.2",
+    "scikit-learn": "1.9.1",
+    "nbformat": "5.11.1",
+    "nbclient": "0.11.0"
+  },
+  "code_cells": 17,
+  "executed_code_cells": 17,
+  "plot_count": 15,
+  "error_count": 0,
+  "text_outputs": [
+    {
+      "cell": 2,
+      "text": "Python: 3.12.7\nPyTorch: 2.14.1 NumPy: 2.5.4 scikit-learn: 1.9.1\nDevice: cpu Quick smoke mode: False\n"
+    },
+    {
+      "cell": 4,
+      "text": "Gaussian held-out NLL: 2.7190 nats per 2D point\n"
+    },
+    {
+      "cell": 7,
+      "text": "Input: [batch, 2]; code: [batch, 2]; logdet: [batch]\n"
+    },
+    {
+      "cell": 9,
+      "text": "Flow training and evaluation: 5.5 seconds\nHeld-out NLL, Gaussian: 2.7190; flow: 1.5948 nats per 2D point\nFlow NLL improvement: 1.1242\n"
+    },
+    {
+      "cell": 11,
+      "text": "Roundtrip max error: 7.15e-07"
+    },
+    {
+      "cell": 11,
+      "text": "\nForward/inverse logdet cancellation: 4.77e-07\nAutograd/analytic logdet error: 1.67e-06\n"
+    },
+    {
+      "cell": 13,
+      "text": "Conditional-flow mixture held-out marginal NLL: 1.5373\n"
+    },
+    {
+      "cell": 16,
+      "text": "Diffusion training device: mps\n"
+    },
+    {
+      "cell": 16,
+      "text": "Train: (12000, 784) Test: (2000, 784)\n"
+    },
+    {
+      "cell": 16,
+      "text": "Terminal alpha_bar: 2.43e-07\n"
+    },
+    {
+      "cell": 19,
+      "text": "DDPM step 1000/6000; noise MSE: 0.0823\n"
+    },
+    {
+      "cell": 19,
+      "text": "DDPM step 2000/6000; noise MSE: 0.0553\n"
+    },
+    {
+      "cell": 19,
+      "text": "DDPM step 3000/6000; noise MSE: 0.0547\n"
+    },
+    {
+      "cell": 19,
+      "text": "DDPM step 4000/6000; noise MSE: 0.0483\n"
+    },
+    {
+      "cell": 19,
+      "text": "DDPM step 5000/6000; noise MSE: 0.0454\n"
+    },
+    {
+      "cell": 19,
+      "text": "DDPM step 6000/6000; noise MSE: 0.0498\n"
+    },
+    {
+      "cell": 19,
+      "text": "DDPM training: 375.0 seconds\nHeld-out noise MSE: 0.0422; zero predictor baseline: 0.9989\n"
+    },
+    {
+      "cell": 21,
+      "text": "Held-out noise MSE by k: {1: 0.1887, 10: 0.0935, 30: 0.0481, 60: 0.0271, 90: 0.0052, 100: 0.0005}\n"
+    },
+    {
+      "cell": 23,
+      "text": "Known-noise x0 reconstruction error: 2.05e-04\n"
+    },
+    {
+      "cell": 26,
+      "text": "MNIST held-out probe accuracy: 0.907\n"
+    },
+    {
+      "cell": 26,
+      "text": "Conditional DDPM probe class agreement: 0.825\nClass agreement does not measure diversity or guarantee sample quality.\n"
+    },
+    {
+      "cell": 28,
+      "text": "Inference only; no training performed.\n"
+    },
+    {
+      "cell": 31,
+      "text": "Pixel MSE to original in [-1, 1], damaged: 0.1488\nPixel MSE after editing: {10: 0.1435, 35: 0.1595, 70: 0.2312}\n"
+    },
+    {
+      "cell": 34,
+      "text": "Known-pixel max error: 0.00e+00\nMissing-pixel MSE, gray fill: 0.8028; inpainting: 0.4432\n"
+    },
+    {
+      "cell": 37,
+      "text": "{'quick_mode': False, 'device': 'mps', 'flow_steps': 1600, 'ddpm_steps': 6000, 'conditional_class_agreement': 0.825, 'conditional_flow_marginal_nll': 1.5373486280441284, 'gaussian_test_nll': 2.718989372253418, 'flow_test_nll': 1.5947524309158325, 'flow_roundtrip_max_error': 7.152557373046875e-07, 'flow_jacobian_logdet_error': 1.6689300537109375e-06, 'ddpm_test_noise_mse': 0.04216247797012329, 'ddpm_zero_predictor_mse': 0.9989173412322998, 'oracle_x0_max_error': 0.000205308198928833, 'damaged_edit_mse': 0.1487535536289215, 'edit_mse_by_start_k': {10: 0.14349791407585144, 35: 0.15946519374847412, 70: 0.23120947182178497}, 'inpaint_known_pixel_max_error': 0.0, 'inpaint_missing_mse': 0.4431730806827545, 'gray_fill_missing_mse': 0.802769660949707, 'flow_seconds': 5.483459332957864, 'ddpm_seconds': 374.98830316599924}\n"
+    },
+    {
+      "cell": 39,
+      "text": "Pet demo: [2, 3, 256, 256] -> [2, 4, 32, 32] ; reconstruction MSE: [0.0025059052277356386, 0.005918176379054785]\n"
+    }
+  ],
+  "notebook_sha256": "316f3182a50f53af092408d1b71c636af247e08fe46e85c9c9ee5b633c644a28",
+  "colab_hosted_runtime_tested": true,
+  "colab_verification_report": "colab_02_execution.json"
+}

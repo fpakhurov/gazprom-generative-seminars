@@ -1,0 +1,16 @@
+{
+  "date": "2026-11-05",
+  "scope": "Isolated synthetic-data check; not a full notebook or quality-validation run",
+  "gan_steps": 3,
+  "cgan_steps": 3,
+  "updates_observed": 5,
+  "model_state_preserved": true,
+  "training_modes_preserved": true,
+  "gradient_flags_preserved": true,
+  "torch_rng_preserved": true,
+  "scores_finite_and_in_unit_interval": true,
+  "figures_closed": true,
+  "helper_sha256": "027318be6b16126a9ca99024911e20f11bb627535e23e2dcbadc17380e9a721a",
+  "ipython_clear_output_protocol": "Two previews in one isolated cell; exactly one final PNG retained",
+  "full_notebook_executed": false
+}
