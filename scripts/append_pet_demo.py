@@ -1,4 +1,4 @@
-"""Add self-contained real cat/dog image experiments to the two seminars."""
+"""Add the real cat/dog autoencoder experiment to the first seminar."""
 
 import argparse
 from pathlib import Path
@@ -7,12 +7,16 @@ import nbformat as nbf
 root = Path(__file__).resolve().parents[1]
 module = (root / "scripts" / "pet_demo.py").read_text().split('if __name__ == "__main__":')[0]
 parser = argparse.ArgumentParser()
-parser.add_argument("notebooks", nargs="*", default=["01_vae_gan.ipynb", "02_flows_diffusion.ipynb"])
+parser.add_argument("notebooks", nargs="*", default=["01_vae_gan.ipynb"])
 arguments = parser.parse_args()
 for filename in arguments.notebooks:
     path = root / filename
     notebook = nbf.read(path, as_version=4)
     notebook.cells = [cell for cell in notebook.cells if "pet_extension" not in cell.metadata.get("tags", [])]
+    if path.name == "02_flows_diffusion.ipynb":
+        nbf.write(notebook, path)
+        print("Removed repeated cat/dog experiment:", path.name)
+        continue
     explanation = nbf.v4.new_markdown_cell(r"""
 ## Фотографии кошки и собаки: латентное представление
 
@@ -26,9 +30,6 @@ for filename in arguments.notebooks:
 
 **Теория:** [Латентная диффузия: роль автоэнкодера](https://fpakhurov.com/ru/notes/generative-models/latent-diffusion/), [условный перевод доменов](https://fpakhurov.com/ru/notes/generative-models/stargan/).
 """.strip())
-    if filename.startswith("02_"):
-        explanation.source = explanation.source.replace("## Фотографии", "## Дополнительно: фотографии", 1)
-        explanation.source += "\n\nЭтот опыт разобран в первом семинаре; повторный показ во втором в основной тайминг не входит."
     demo = nbf.v4.new_code_cell(
         '#@title Real cat and dog: reconstruction and latent perturbation\n'
         'RUN_PET_DEMO = True #@param {type:"boolean"}\n'

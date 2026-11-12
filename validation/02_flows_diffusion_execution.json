@@ -1,10 +1,10 @@
 {
   "notebook": "02_flows_diffusion.ipynb",
-  "execution": "Partial source update; full notebook run skipped at user request",
+  "execution": "Source revision with static checks; retained code cells unchanged",
   "full_notebook_executed": false,
   "validation_scope": "partial",
-  "date": "2026-11-05",
-  "code_cells": 17,
+  "date": "2026-11-12",
+  "code_cells": 16,
   "executed_code_cells": 0,
   "historical_output_cells": [
     4,
@@ -19,8 +19,7 @@
     28,
     31,
     34,
-    37,
-    39
+    37
   ],
   "pending_code_cells": [
     2,
@@ -31,5 +30,11 @@
   "historical_outputs_revision": "v1.2.0",
   "targeted_check": "Python AST and nbformat validation",
   "colab_hosted_runtime_tested": false,
-  "notebook_sha256": "b7a8305df42eee86c408e5a77247c7636dd693be7d12da519c03eec921103c8b"
+  "notebook_sha256": "1eb5baa0b2c2b7a99d50b969e49a0fab090ef808c0ed960cf1f2881bde957b80",
+  "editorial_revision": {
+    "removed_extension": "TAESD photo demonstration",
+    "retained_code_cells_unchanged": true,
+    "new_training_run": false,
+    "outputs_preserved_from_sha256": "b7a8305df42eee86c408e5a77247c7636dd693be7d12da519c03eec921103c8b"
+  }
 }
