@@ -29,7 +29,7 @@
 
 [Открыть в Colab](https://colab.research.google.com/github/fpakhurov/gazprom-generative-seminars/blob/main/03_homework_celeba.ipynb) · [Скачать ноутбук](03_homework_celeba.ipynb)
 
-VAE, нормализующий поток, VAPNEV и conditional VAPNEV на CelebA 64×64. Задания адаптированы для запуска в Colab из курса HSE-LAMBDA. Суммарная оценка — 10 баллов. Архив изображений и атрибуты выдаются преподавателем отдельно. Инструкция по загрузке и класс датасета включены в ноутбук.
+VAE, нормализующий поток, VAPNEV и conditional VAPNEV на CelebA 64×64. Задания адаптированы для запуска в Colab из курса HSE-LAMBDA. Суммарная оценка — 10 баллов. Ноутбук автоматически скачивает архив изображений и атрибутов из Google Drive и проверяет SHA-256. Инструкция и класс датасета включены в ноутбук.
 
 <details>
 <summary>Локальный запуск</summary>

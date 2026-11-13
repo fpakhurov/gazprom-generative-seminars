@@ -168,11 +168,11 @@ Colab-версия задания HSE-LAMBDA. Сохранены задания,
 | **Всего** | **10** |
 
 1. Сохраните копию ноутбука в Google Drive. Выберите GPU в настройках среды выполнения.
-2. Загрузите выданный преподавателем `celeba.zip` в Colab либо укажите путь к нему на Google Drive.
-3. В выданном `celeba.zip` уже находятся изображения и `annotations/list_attr_celeba.txt`. Оставьте `ATTR_ZIP` и `ATTR_PATH` пустыми.
-4. Выполните ячейки подготовки и визуализации данных. Далее заполните исходные `TODO` и проведите эксперименты.
+2. Выполните ячейки подготовки. Ноутбук автоматически скачает `celeba.zip` по открытой ссылке Google Drive, проверит контрольную сумму и распакует данные.
+3. Изображения и `annotations/list_attr_celeba.txt` входят в один архив. Настройки загрузки можно оставить по умолчанию.
+4. После визуализации данных заполните исходные `TODO` и проведите эксперименты.
 
-Для большого ZIP удобнее использовать файл на Drive. При загрузке через левую панель «Файлы» Colab архив обычно доступен как `/content/celeba.zip`. Данные в `/content` хранятся до завершения сессии.
+Архив занимает около 1,49 ГБ. Загрузка выполняется в файловую систему Colab. Данные в `/content` хранятся до завершения сессии. [Архив CelebA](https://drive.google.com/file/d/1vQZtj1uLUa4pbBddsIYYk3MkjyHqoEMH/view)
 
 Загрузчик `CelebADataset` из курса включён в ноутбук с адаптацией путей и загрузки локальных архивов. Подготовка работает без клонирования репозитория.
 
@@ -182,6 +182,7 @@ Colab-версия задания HSE-LAMBDA. Сохранены задания,
         if index == 2:
             code(r'''
 import importlib.util
+import importlib.metadata
 import subprocess
 import sys
 
@@ -189,6 +190,8 @@ packages = {"torch": "torch", "PIL": "pillow", "numpy": "numpy", "matplotlib": "
 missing = [package for module, package in packages.items() if importlib.util.find_spec(module) is None]
 if missing:
     subprocess.check_call([sys.executable, "-m", "pip", "install", "-q", *missing])
+if not importlib.util.find_spec("gdown") or importlib.metadata.version("gdown") != "6.5.1":
+    subprocess.check_call([sys.executable, "-m", "pip", "install", "-q", "gdown==6.5.1"])
 
 from pathlib import Path
 import random
@@ -223,16 +226,19 @@ celeba/
     └── list_attr_celeba.txt
 ```
 
-`IMAGE_ZIP` — путь к выданному архиву. `ATTR_ZIP` — путь к отдельному ZIP с атрибутами, если он есть. `ATTR_PATH` — путь к уже распакованному `list_attr_celeba.txt`.
+По умолчанию `DOWNLOAD_FROM_DRIVE=True` скачивает открытый архив в `IMAGE_ZIP`. Подключение личного Google Drive для этого не требуется. Корректный локальный архив используется повторно. Прерванное скачивание можно продолжить повторным запуском ячейки.
+
+`ATTR_ZIP` и `ATTR_PATH` оставьте пустыми. Эти поля нужны для отдельного архива атрибутов или уже распакованного `list_attr_celeba.txt` при использовании собственного набора файлов.
 
 Проверенный архив занимает около 1,49 ГБ и содержит 202 599 изображений и 40 атрибутов. Достаточно указать один `IMAGE_ZIP`. Служебные файлы macOS в `__MACOSX` загрузчик пропускает.
 
-`DATA_DIR` задаёт каталог распаковки. Дополнительная папка `celeba` внутри архива поддерживается. Если данные уже распакованы, оставьте оба пути ZIP пустыми и укажите их каталог в `DATA_DIR`. При нескольких наборах данных сузьте каталог поиска, при нескольких файлах атрибутов задайте `ATTR_PATH` явно.
+`DATA_DIR` задаёт каталог распаковки. Дополнительная папка `celeba` внутри архива поддерживается. Для уже распакованных данных выключите `DOWNLOAD_FROM_DRIVE` и `EXTRACT_ARCHIVES` и укажите их каталог в `DATA_DIR`. При нескольких наборах данных сузьте каталог поиска, при нескольких файлах атрибутов задайте `ATTR_PATH` явно.
 
-Для Drive включите `USE_GOOGLE_DRIVE` и укажите путь вида `/content/drive/MyDrive/celeba.zip`. Файлы распаковываются в локальный `DATA_DIR`, чтобы чтение batch не зависело от скорости Drive. При повторном запуске подготовки можно выключить `EXTRACT_ARCHIVES`.
+Если Google Drive временно ограничит скачивания, можно использовать свою копию архива. Выключите `DOWNLOAD_FROM_DRIVE`, включите `USE_GOOGLE_DRIVE` и укажите путь вида `/content/drive/MyDrive/celeba.zip`. Для загруженного локального файла выключите `DOWNLOAD_FROM_DRIVE` и укажите `IMAGE_ZIP`. При повторном запуске подготовки можно выключить `EXTRACT_ARCHIVES`.
 """)
             code(r'''
-#@title Dataset paths
+#@title Download and prepare CelebA
+DOWNLOAD_FROM_DRIVE = True #@param {type:"boolean"}
 USE_GOOGLE_DRIVE = False #@param {type:"boolean"}
 IMAGE_ZIP = "/content/celeba.zip" #@param {type:"string"}
 ATTR_ZIP = "" #@param {type:"string"}
@@ -243,6 +249,16 @@ EXTRACT_ARCHIVES = True #@param {type:"boolean"}
 if USE_GOOGLE_DRIVE:
     from google.colab import drive
     drive.mount("/content/drive")
+
+if DOWNLOAD_FROM_DRIVE:
+    if not IMAGE_ZIP.strip():
+        raise ValueError("Set IMAGE_ZIP to the local destination for the download.")
+    download_celeba(
+        file_id="1vQZtj1uLUa4pbBddsIYYk3MkjyHqoEMH",
+        archive_path=IMAGE_ZIP,
+        expected_size=1491502698,
+        expected_sha256="ec9b0e280f8a3ea83c08ae9813c2a2f714a229eb80699868698a91974089e014",
+    )
 
 if EXTRACT_ARCHIVES:
     for archive_path in (IMAGE_ZIP, ATTR_ZIP):

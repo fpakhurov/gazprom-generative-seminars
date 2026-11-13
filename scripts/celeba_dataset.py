@@ -5,11 +5,12 @@ Revision: 42dd64b535f5bedf1d2b3db28f2f21ce96c9f09f
 Copyright (c) 2024 Laboratory of methods for Big Data Analysis at HSE.
 MIT License; see assets/HSE_LAMBDA_LICENSE.txt.
 
-The original dataset interface is preserved. Data is supplied explicitly by the
-instructor instead of downloaded from the upstream Google Drive links.
+The original dataset interface is preserved. Data comes from the instructor's
+shared archive or a local copy.
 """
 
 from pathlib import Path, PurePosixPath
+import hashlib
 import shutil
 import stat
 import tempfile
@@ -18,6 +19,46 @@ import zipfile
 from PIL import Image
 import torch
 from torch.utils.data import Dataset
+
+
+def file_sha256(path):
+    """Hash a file without loading the archive into memory."""
+    digest = hashlib.sha256()
+    with Path(path).open("rb") as source:
+        for block in iter(lambda: source.read(1024 * 1024), b""):
+            digest.update(block)
+    return digest.hexdigest()
+
+
+def download_celeba(file_id, archive_path, expected_size, expected_sha256):
+    """Download the public archive, verify it, and reuse a valid local copy."""
+    archive_path = Path(archive_path).expanduser()
+    archive_path.parent.mkdir(parents=True, exist_ok=True)
+    if archive_path.is_file():
+        if archive_path.stat().st_size == expected_size and file_sha256(archive_path) == expected_sha256:
+            print("Using verified archive:", archive_path)
+            return archive_path
+        print("Replacing an incomplete or mismatched archive:", archive_path)
+
+    staging = archive_path.with_name(archive_path.name + ".download")
+    if staging.is_file():
+        if staging.stat().st_size != expected_size or file_sha256(staging) != expected_sha256:
+            staging.unlink()
+    if not staging.is_file():
+        import gdown
+
+        result = gdown.download(
+            id=file_id, output=str(staging), quiet=False, resume=True,
+            use_cookies=False, timeout=(30, 120), retries=2,
+        )
+        if result is None or not staging.is_file():
+            raise RuntimeError("Google Drive did not return the archive. Retry the data preparation cell.")
+    if staging.stat().st_size != expected_size or file_sha256(staging) != expected_sha256:
+        staging.unlink()
+        raise ValueError("Downloaded archive checksum mismatch. Retry the data preparation cell.")
+    staging.replace(archive_path)
+    print("Downloaded and verified archive:", archive_path)
+    return archive_path
 
 
 def extract_celeba_zip(archive_path, destination):
