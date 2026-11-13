@@ -1,9 +1,9 @@
 {
   "notebook": "03_homework_celeba.ipynb",
   "date": "2026-11-13",
-  "validation_scope": "static and synthetic data preparation checks",
+  "validation_scope": "static, synthetic, and real archive data preparation checks",
   "colab_hosted_runtime_tested": false,
-  "instructor_archive_tested": false,
+  "instructor_archive_tested": true,
   "model_training_performed": false,
   "original_tasks_preserved_except_scoring": true,
   "points": {
@@ -20,6 +20,68 @@
     "Explicit attributes path and actionable failures for ambiguity or missing labels",
     "Archive path validation"
   ],
-  "notebook_sha256": "eab3fe82122b4bdb96d15e0269953a7a842d1107a68e60ab0f539b38fbc55245",
-  "upstream_notebook_sha256": "b94c5b1539d84e0cc66b63099536450876a53ba7b836326f113fad759859c0f9"
+  "notebook_sha256": "e335e156f82d438dbc9ab22d3cffaa48b154a21633e470e783158a9354b49db4",
+  "upstream_notebook_sha256": "b94c5b1539d84e0cc66b63099536450876a53ba7b836326f113fad759859c0f9",
+  "instructor_archive": {
+    "archive": "celeba.zip",
+    "archive_bytes": 1491502698,
+    "md5": "a1751653744391a5cd22d9102404fec8",
+    "sha256": "ec9b0e280f8a3ea83c08ae9813c2a2f714a229eb80699868698a91974089e014",
+    "hash_seconds": 7.6,
+    "zip_entries": 405206,
+    "macos_entries_ignored": 202603,
+    "image_count": 202599,
+    "unique_image_names": 202599,
+    "attributes_declared_count": 202599,
+    "attributes_header_count": 40,
+    "attributes_rows": 202599,
+    "unique_attribute_names": 202599,
+    "invalid_attribute_rows": 0,
+    "attribute_values": [
+      -1,
+      1
+    ],
+    "images_missing_attributes": 0,
+    "attributes_missing_images": 0,
+    "image_and_attribute_order_match": false,
+    "crc_complete": true,
+    "crc_checked_files": 405203,
+    "crc_seconds": 18.95,
+    "crc_errors": 0,
+    "fixture": {
+      "sample_count": 5,
+      "full_attribute_rows_loaded": 202599,
+      "source_image_sizes_wh": [
+        [
+          178,
+          218
+        ]
+      ],
+      "transformed_shapes": [
+        [
+          3,
+          64,
+          64
+        ]
+      ],
+      "transformed_dtype": "torch.float32",
+      "observed_range": [
+        -1.0,
+        1.0
+      ],
+      "attribute_shapes": [
+        [
+          40
+        ]
+      ],
+      "attribute_dtype": "torch.int64",
+      "binary_mapped_values": [
+        0,
+        1
+      ],
+      "attribute_filename_alignment_verified": true,
+      "training_performed": false
+    },
+    "total_seconds": 54.0
+  }
 }
