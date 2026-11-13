@@ -1,7 +1,7 @@
 {
   "notebook": "03_homework_celeba.ipynb",
   "date": "2026-11-13",
-  "validation_scope": "static, synthetic, and real archive data preparation checks",
+  "validation_scope": "static, synthetic, real archive, and anonymous download smoke checks",
   "colab_hosted_runtime_tested": false,
   "instructor_archive_tested": true,
   "model_training_performed": false,
@@ -92,5 +92,17 @@
     "Invalid completed staging cleared while resumable internal partial is preserved",
     "Bad server content rejected and existing destination preserved",
     "Network exception preserves destination and partial files"
-  ]
+  ],
+  "public_drive_download": {
+    "file_id": "1vQZtj1uLUa4pbBddsIYYk3MkjyHqoEMH",
+    "gdown_version": "6.5.1",
+    "anonymous_download": true,
+    "bytes_downloaded": 862453760,
+    "downloaded_prefix_sha256": "34d8fc0c2316d81a7d43c61eab61d3c5b136ccae603aac4bc5b04e81576f6874",
+    "original_prefix_sha256": "34d8fc0c2316d81a7d43c61eab61d3c5b136ccae603aac4bc5b04e81576f6874",
+    "downloaded_prefix_matches_original": true,
+    "completed": false,
+    "stop_reason": "Local verification host ran out of disk space (OSError errno 28)",
+    "partial_copy_removed": true
+  }
 }
