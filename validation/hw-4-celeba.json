@@ -1,5 +1,5 @@
 {
-  "notebook": "03_homework_celeba.ipynb",
+  "notebook": "hw-4-celeba.ipynb",
   "date": "2026-11-13",
   "validation_scope": "static, synthetic, real archive, and anonymous download smoke checks",
   "colab_hosted_runtime_tested": false,
@@ -20,7 +20,7 @@
     "Explicit attributes path and actionable failures for ambiguity or missing labels",
     "Archive path validation"
   ],
-  "notebook_sha256": "996d3a0acc7aca66320f2138bcd9d1af644c3a6062105682d7f4c6161d7d38ac",
+  "notebook_sha256": "b3dd81c5d5b2e58c88a38da1701ddb59f57f12fb50825b8716a748c431355f63",
   "upstream_notebook_sha256": "b94c5b1539d84e0cc66b63099536450876a53ba7b836326f113fad759859c0f9",
   "instructor_archive": {
     "archive": "celeba.zip",
@@ -104,5 +104,12 @@
     "completed": false,
     "stop_reason": "Local verification host ran out of disk space (OSError errno 28)",
     "partial_copy_removed": true
+  },
+  "renaming_validation": {
+    "date": "2026-11-13",
+    "homework_number": 4,
+    "code_cells_unchanged": true,
+    "only_markdown_changes": "Homework number in the two titles",
+    "notebook_executed": false
   }
 }

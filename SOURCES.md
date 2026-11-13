@@ -2,7 +2,7 @@
 
 Проверка: **3 ноября 2026 года**. Код семинаров — самостоятельные малые реализации; исходные курсы используются для структуры и теоретических объяснений.
 
-## Домашняя работа CelebA
+## Домашняя работа 4: CelebA
 
 Задания и интерфейс датасета взяты из HSE-LAMBDA, revision `42dd64b535f5bedf1d2b3db28f2f21ce96c9f09f`. Для Colab добавлены автоматическое скачивание архива преподавателя из Google Drive, настройка путей и встроенный датасет. Преобразование изображений сохраняет Resize → CenterCrop → нормировку [-1,1]. Баллы пересчитаны до 10. [Исходное задание](https://github.com/HSE-LAMBDA/DeepGenerativeModels/blob/42dd64b535f5bedf1d2b3db28f2f21ce96c9f09f/homeworks/03_hw_vapnev.ipynb) · [Загрузчик](https://github.com/HSE-LAMBDA/DeepGenerativeModels/blob/42dd64b535f5bedf1d2b3db28f2f21ce96c9f09f/seminars/utils/datasets/celeba.py) · [MIT License](assets/HSE_LAMBDA_LICENSE.txt)
 

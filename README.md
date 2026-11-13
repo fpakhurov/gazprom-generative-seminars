@@ -25,9 +25,9 @@
 - План занятий и пояснения к экспериментам. [Методические указания](INSTRUCTOR_GUIDE.md) · [Заметки к семинару 1](LECTURER_NOTES_01.md) · [Заметки к семинару 2](LECTURER_NOTES_02.md)
 - [Архив семинаров](https://github.com/fpakhurov/gazprom-generative-seminars/releases/latest) · [Сведения о среде и проверках](VALIDATION.md)
 
-## Домашняя работа
+## Домашняя работа 4
 
-[Открыть в Colab](https://colab.research.google.com/github/fpakhurov/gazprom-generative-seminars/blob/main/03_homework_celeba.ipynb) · [Скачать ноутбук](03_homework_celeba.ipynb)
+[Открыть в Colab](https://colab.research.google.com/github/fpakhurov/gazprom-generative-seminars/blob/main/hw-4-celeba.ipynb) · [Скачать ноутбук](hw-4-celeba.ipynb)
 
 VAE, нормализующий поток, VAPNEV и conditional VAPNEV на CelebA 64×64. Задания адаптированы для запуска в Colab из курса HSE-LAMBDA. Суммарная оценка — 10 баллов. Ноутбук автоматически скачивает архив изображений и атрибутов из Google Drive и проверяет SHA-256. Инструкция и класс датасета включены в ноутбук.
 

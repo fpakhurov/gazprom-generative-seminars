@@ -72,7 +72,7 @@ for name in ["01_vae_gan", "02_flows_diffusion"]:
     assert actual_figures == expected_figures
     print(name, len(code_cells), "source code cells;" if arguments.source_only else "executed code cells;", len(soup.select(".katex")), "rendered formulas")
 
-homework_path = root / "03_homework_celeba.ipynb"
+homework_path = root / "hw-4-celeba.ipynb"
 homework = nbformat.read(homework_path, as_version=4)
 nbformat.validate(homework)
 homework_builder = runpy.run_path(str(root / "scripts" / "build_homework.py"))
@@ -82,9 +82,9 @@ for cell in homework.cells:
     if cell.cell_type == "code":
         ast.parse(cell.source)
         assert not cell.outputs
-homework_report = json.loads((root / "validation" / "03_homework_celeba.json").read_text())
+homework_report = json.loads((root / "validation" / "hw-4-celeba.json").read_text())
 assert homework_report["notebook_sha256"] == hashlib.sha256(homework_path.read_bytes()).hexdigest()
-print("03_homework_celeba: student template validated")
+print("hw-4-celeba: student template validated")
 
 for text in root.glob("*.md"):
     for target in re.findall(r"\]\(([^)]+)\)", text.read_text()):

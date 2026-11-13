@@ -154,7 +154,7 @@ def build_notebook():
         cells.append(nbformat.v4.new_code_cell(source.strip()))
 
     md(r"""
-# Домашняя работа. VAE + NF + VAPNEV
+# Домашняя работа 4. VAE + NF + VAPNEV
 
 Colab-версия задания HSE-LAMBDA. Сохранены задания, разрешение **64×64** и требования к сдаче. Шкала переведена в **10 баллов**.
 
@@ -322,6 +322,8 @@ print("Attribute names:", dataset.header)
         else:
             constructor = md if original["cell_type"] == "markdown" else code
             source = original["source"]
+            if index == 0:
+                source = source.replace("# Домашнее задание 3.", "# Домашнее задание 4.")
             for old_score, new_score in [("4/13 баллов", "3/10 баллов"), ("2/13 баллов", "2/10 баллов"), ("6/13 баллов", "4/10 баллов"), ("1/13 баллов", "1/10 баллов"), ("(4 балла)", "(3 балла)"), ("(2 балла)", "(1 балл)")]:
                 source = source.replace(old_score, new_score)
             constructor(source)
@@ -344,7 +346,7 @@ print("Attribute names:", dataset.header)
     notebook.metadata.update({
         "kernelspec": {"display_name": "Python 3", "language": "python", "name": "python3"},
         "language_info": {"name": "python"},
-        "colab": {"name": "03_homework_celeba.ipynb", "provenance": []},
+        "colab": {"name": "hw-4-celeba.ipynb", "provenance": []},
         "homework": {"upstream": UPSTREAM_URL, "image_size": 64, "points": 10},
     })
     return notebook
@@ -353,5 +355,5 @@ print("Attribute names:", dataset.header)
 if __name__ == "__main__":
     notebook = build_notebook()
     nbformat.validate(notebook)
-    nbformat.write(notebook, ROOT / "03_homework_celeba.ipynb")
+    nbformat.write(notebook, ROOT / "hw-4-celeba.ipynb")
     print("Built Colab homework:", len(notebook.cells), "cells")
