@@ -6,6 +6,7 @@ import hashlib
 import json
 from pathlib import Path
 import re
+import runpy
 import zipfile
 
 from bs4 import BeautifulSoup
@@ -71,6 +72,20 @@ for name in ["01_vae_gan", "02_flows_diffusion"]:
     assert actual_figures == expected_figures
     print(name, len(code_cells), "source code cells;" if arguments.source_only else "executed code cells;", len(soup.select(".katex")), "rendered formulas")
 
+homework_path = root / "03_homework_celeba.ipynb"
+homework = nbformat.read(homework_path, as_version=4)
+nbformat.validate(homework)
+homework_builder = runpy.run_path(str(root / "scripts" / "build_homework.py"))
+assert homework == homework_builder["build_notebook"]()
+assert homework.metadata.homework.points == 10
+for cell in homework.cells:
+    if cell.cell_type == "code":
+        ast.parse(cell.source)
+        assert not cell.outputs
+homework_report = json.loads((root / "validation" / "03_homework_celeba.json").read_text())
+assert homework_report["notebook_sha256"] == hashlib.sha256(homework_path.read_bytes()).hexdigest()
+print("03_homework_celeba: student template validated")
+
 for text in root.glob("*.md"):
     for target in re.findall(r"\]\(([^)]+)\)", text.read_text()):
         if not re.match(r"[a-z]+://", target) and not target.startswith("#"):
@@ -81,6 +96,7 @@ excluded_parts = {".git", ".venv", "venv", ".cache", ".ipynb_checkpoints",
 files = [path for path in root.rglob("*") if path.is_file()
          and not excluded_parts.intersection(path.relative_to(root).parts)
          and path.name not in {".DS_Store", "MANIFEST.sha256", ".env"}
+         and path.suffix.lower() != ".zip"
          and not path.name.startswith(".env.")]
 manifest = "\n".join(f"{hashlib.sha256(path.read_bytes()).hexdigest()}  {path.relative_to(root)}"
                      for path in sorted(files)) + "\n"

@@ -1,0 +1,25 @@
+{
+  "notebook": "03_homework_celeba.ipynb",
+  "date": "2026-11-13",
+  "validation_scope": "static and synthetic data preparation checks",
+  "colab_hosted_runtime_tested": false,
+  "instructor_archive_tested": false,
+  "model_training_performed": false,
+  "original_tasks_preserved_except_scoring": true,
+  "points": {
+    "NF": 3,
+    "VAE": 2,
+    "VAPNEV": 3,
+    "conditional_VAPNEV": 1,
+    "analysis": 1
+  },
+  "checks": [
+    "All template code cells on a synthetic combined ZIP; image shapes, values, attribute alignment, and visualization",
+    "Separate image and attribute ZIPs and repeated extraction",
+    "Outer CelebA ZIP with inner img_align_celeba.zip",
+    "Explicit attributes path and actionable failures for ambiguity or missing labels",
+    "Archive path validation"
+  ],
+  "notebook_sha256": "eab3fe82122b4bdb96d15e0269953a7a842d1107a68e60ab0f539b38fbc55245",
+  "upstream_notebook_sha256": "b94c5b1539d84e0cc66b63099536450876a53ba7b836326f113fad759859c0f9"
+}
