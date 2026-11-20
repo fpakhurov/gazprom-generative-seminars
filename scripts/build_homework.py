@@ -355,5 +355,7 @@ print("Attribute names:", dataset.header)
 if __name__ == "__main__":
     notebook = build_notebook()
     nbformat.validate(notebook)
-    nbformat.write(notebook, ROOT / "hw-4-celeba.ipynb")
+    # Keep previously distributed Colab links usable.
+    for filename in ("hw-4-celeba.ipynb", "03_homework_celeba.ipynb"):
+        nbformat.write(notebook, ROOT / filename)
     print("Built Colab homework:", len(notebook.cells), "cells")

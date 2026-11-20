@@ -73,6 +73,7 @@ for name in ["01_vae_gan", "02_flows_diffusion"]:
     print(name, len(code_cells), "source code cells;" if arguments.source_only else "executed code cells;", len(soup.select(".katex")), "rendered formulas")
 
 homework_path = root / "hw-4-celeba.ipynb"
+assert (root / "03_homework_celeba.ipynb").read_bytes() == homework_path.read_bytes()
 homework = nbformat.read(homework_path, as_version=4)
 nbformat.validate(homework)
 homework_builder = runpy.run_path(str(root / "scripts" / "build_homework.py"))
